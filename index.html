@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>C.S. Le Tremplin 2 - GESTION MULTI-DEVISES</title>
+    <title id="pageTitle">Gestion Scolaire Pro</title>
     <style>
         :root { 
             --sidebar: #1a252f; --accent: #27ae60; --bg: #f4f7f6; 
@@ -15,20 +15,17 @@
         .login-box { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; backdrop-filter: blur(10px); text-align: center; }
 
         nav { width: 260px; background: var(--sidebar); color: white; padding: 20px 0; display: flex; flex-direction: column; flex-shrink: 0; }
-        nav h2 { text-align: center; color: var(--accent); margin-bottom: 20px; font-size: 1.2rem; }
+        nav h2 { text-align: center; color: var(--accent); margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; padding: 0 10px; }
         .nav-item { padding: 15px 25px; cursor: pointer; border-left: 4px solid transparent; transition: 0.3s; font-size: 0.9rem; }
         .nav-item:hover, .nav-item.active { background: #2c3e50; border-left-color: var(--accent); }
         
         main { flex: 1; padding: 25px; overflow-y: auto; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: white; padding: 15px; border-radius: 8px; border-bottom: 4px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .currency-badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; color: #555; display: block; margin-top: 4px; }
 
         .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
         input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; }
-        
-        .filter-bar { background: #ebedef; padding: 15px; border-radius: 8px; display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
 
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85rem; }
@@ -39,6 +36,14 @@
         .btn-del { background: var(--danger); }
         .btn-print { background: var(--warning); }
         .btn-info { background: var(--info); }
+
+        /* REÇU STYLE */
+        .receipt-container { width: 100%; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #ccc; background: white; color: #000; position: relative; }
+        .receipt-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .receipt-title { font-weight: bold; font-size: 1.2rem; }
+        .receipt-table { width: 100%; margin-top: 20px; border-top: 1px dashed #000; border-collapse: collapse; }
+        .receipt-table th, .receipt-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        .receipt-total { margin-top: 15px; text-align: right; font-weight: bold; font-size: 1.1rem; }
 
         @media print {
             body * { visibility: hidden; }
@@ -52,15 +57,14 @@
 
     <div id="loginOverlay">
         <div class="login-box">
-            <h2>🔐 GESTION SCOLAIRE</h2>
-            <p style="margin-bottom: 15px;">République Démocratique du Congo</p>
-            <input type="password" id="pinInput" placeholder="Code PIN" style="width: 100%; text-align: center; margin-bottom: 15px; padding:10px;">
+            <h2 id="loginSchoolName">🔐 GESTION SCOLAIRE</h2>
+            <input type="password" id="pinInput" placeholder="Code PIN" style="width: 100%; text-align: center; margin: 15px 0;">
             <button class="btn-main" onclick="checkLogin()" style="width: 100%;">SE CONNECTER</button>
         </div>
     </div>
 
     <nav>
-        <h2>LE TREMPLIN 2</h2>
+        <h2 id="navSchoolName">CHARGEMENT...</h2>
         <div class="nav-item active" onclick="showSection('eleves', this)">👤 Inscriptions</div>
         <div class="nav-item" onclick="showSection('paiements', this)">💰 Minerval & FC</div>
         <div class="nav-item" onclick="showSection('personnel', this)">👔 Staff & Salaires</div>
@@ -74,17 +78,13 @@
     <main>
         <div class="stats-grid">
             <div class="stat-card"><h4>Effectif Total</h4><p id="statTotalEleves">0</p></div>
-            <div class="stat-card" style="border-color:var(--warning)">
-                <h4>Recettes du Mois</h4>
-                <p id="statRecettes">0 $</p>
-                <span class="currency-badge" id="statRecettesFC">0 FC</span>
-            </div>
-            <div class="stat-card" style="border-color:var(--info)"><h4>Taux Appliqué</h4><p id="statTaux">2250 FC</p></div>
+            <div class="stat-card" style="border-color:var(--warning)"><h4>Recettes (Mois)</h4><p id="statRecettes">0 $</p></div>
+            <div class="stat-card" style="border-color:var(--info)"><h4>Taux</h4><p id="statTaux">2250 FC</p></div>
         </div>
 
         <section id="eleves" class="section">
             <div class="card">
-                <h3>Ajouter un Elève</h3>
+                <h3>Nouvelle Inscription</h3>
                 <div class="form-group">
                     <input type="text" id="nom" placeholder="Nom complet">
                     <select id="classeSelect" onchange="suggererTarif()"></select>
@@ -93,12 +93,12 @@
                 </div>
             </div>
             <div class="card">
-                <div class="filter-bar">
-                    <label>Classe :</label>
+                <div class="form-group">
+                    <label>Filtrer :</label>
                     <select id="filtreListeEleve" onchange="chargerEleves()"></select>
                 </div>
                 <table id="tableEleves">
-                    <thead><tr><th>Nom</th><th>Classe</th><th>Tarif ($ / FC)</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Nom</th><th>Classe</th><th>Cycle</th><th>Tarif ($)</th><th>Action</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -106,13 +106,13 @@
 
         <section id="paiements" class="section" style="display:none;">
             <div class="card">
-                <div class="filter-bar">
-                    <div style="flex:1"><label>Mois :</label><select id="moisSelect" onchange="chargerPaiements()">
+                <div class="form-group">
+                    <select id="moisSelect" onchange="chargerPaiements()">
                         <option>Septembre</option><option>Octobre</option><option>Novembre</option><option>Décembre</option>
                         <option>Janvier</option><option>Février</option><option>Mars</option><option>Avril</option>
-                        <option>Mai</option><option>Juin</option><option>Juillet</option><option>Août</option>
-                    </select></div>
-                    <div style="flex:2"><label>Classe :</label><select id="filtreClasse" onchange="chargerPaiements()"></select></div>
+                        <option>Mai</option><option>Juin</option>
+                    </select>
+                    <select id="filtreClasse" onchange="chargerPaiements()"></select>
                 </div>
                 <div id="zoneTablePaiement" style="display:none;">
                     <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -124,42 +124,53 @@
                         <tbody></tbody>
                     </table>
                 </div>
-                <div id="emptyMsg" style="text-align:center; padding:40px; color:#95a5a6;">Sélectionnez une classe.</div>
             </div>
         </section>
 
         <section id="personnel" class="section" style="display:none;">
             <div class="card">
-                <h3>Paie du Personnel</h3>
+                <h3>Paie du Personnel & Avances</h3>
                 <table id="tableStaff">
-                    <thead><tr><th>Nom</th><th>Salaire ($ / FC)</th><th>Net à Payer</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Nom</th><th>Salaire ($)</th><th>Avances Cumulées</th><th>Net à Payer</th><th>Action</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </section>
 
         <section id="config" class="section" style="display:none;">
-            <div class="card" style="background: #fff3cd;">
-                <h3>⚙️ Taux de Change (FC)</h3>
+            <div class="card" style="background: #e1f5fe;">
+                <h3>🏫 Coordonnées de l'École</h3>
                 <div class="form-group">
-                    <label>1 USD ($) = </label>
-                    <input type="number" id="tauxInput" placeholder="Ex: 2250">
-                    <button class="btn-dark" style="background:#333" onclick="changerTaux()">Mettre à jour le taux</button>
+                    <input type="text" id="schoolNameInput" placeholder="Nom de l'école">
+                    <input type="text" id="schoolAddress" placeholder="Adresse complète">
+                    <input type="text" id="schoolPhone" placeholder="Téléphones">
+                    <button class="btn-info" onclick="sauverCoords()">Enregistrer</button>
                 </div>
             </div>
             <div class="card">
-                <h3>Sécurité & Classes</h3>
+                <h3>⚙️ Taux & Sécurité</h3>
+                <div class="form-group">
+                    <label>1$ = </label><input type="number" id="tauxInput">
+                    <button class="btn-main" onclick="changerTaux()">Mettre à jour le taux</button>
+                </div>
                 <div class="form-group">
                     <input type="password" id="newPin" placeholder="Nouveau Code PIN">
                     <button class="btn-info" onclick="changerPin()">Changer PIN</button>
                 </div>
-                <hr style="margin:20px 0">
+            </div>
+            <div class="card">
+                <h3>Gestion des Classes</h3>
                 <div class="form-group">
-                    <input type="text" id="newClassName" placeholder="Nouvelle Classe">
+                    <select id="newClassCat">
+                        <option value="1">1. MATERNELLE</option>
+                        <option value="2">2. PRIMAIRE</option>
+                        <option value="3">3. SECONDAIRE</option>
+                    </select>
+                    <input type="text" id="newClassName" placeholder="Nom Classe">
                     <input type="number" id="newClassTarif" placeholder="Prix $">
                     <button class="btn-main" onclick="ajouterClasse()">Ajouter</button>
                 </div>
-                <table id="tableConfigClasses"><thead><tr><th>Classe</th><th>Tarif $</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <table id="tableConfigClasses"><thead><tr><th>Cycle</th><th>Classe</th><th>Prix</th><th>Action</th></tr></thead><tbody></tbody></table>
             </div>
         </section>
     </main>
@@ -167,27 +178,14 @@
     <div id="printArea"><div id="contentToPrint"></div></div>
 
     <script>
-        const initialClasses = [
-            {nom:"1er Maternelle", tarif:50}, {nom:"2ème Maternelle", tarif:50}, {nom:"3ème Maternelle", tarif:50},
-            {nom:"1ère Primaire A", tarif:80}, {nom:"1ère Primaire B", tarif:80}, {nom:"2ème Primaire A", tarif:80},
-            {nom:"7ème", tarif:110}, {nom:"1er CG", tarif:140}, {nom:"1er Scientifique", tarif:150}
-        ];
-
-        function generer150Eleves() {
-            let arr = [];
-            initialClasses.forEach(cl => {
-                for(let i=1; i<=10; i++) {
-                    arr.push({nom: `Eleve ${i} de ${cl.nom}`, classe: cl.nom, tarif: cl.tarif, paiements: {Septembre: Math.random() > 0.4}});
-                }
-            });
-            return arr;
-        }
-
+        // --- VARIABLES & STORAGE ---
         let currentPin = localStorage.getItem('t2_pin') || "1234";
         let tauxChange = Number(localStorage.getItem('t2_taux')) || 2250;
-        let classes = JSON.parse(localStorage.getItem('t2_classes')) || initialClasses;
-        let eleves = JSON.parse(localStorage.getItem('t2_eleves')) || generer150Eleves();
+        let schoolData = JSON.parse(localStorage.getItem('t2_sdata')) || { name: "C.S. LE TREMPLIN 2", addr: "", tel: "" };
+        let classes = JSON.parse(localStorage.getItem('t2_classes')) || [];
+        let eleves = JSON.parse(localStorage.getItem('t2_eleves')) || [];
         let staff = JSON.parse(localStorage.getItem('t2_staff')) || [];
+        let referenceCount = Number(localStorage.getItem('t2_ref')) || 1000;
 
         function checkLogin() {
             if(document.getElementById('pinInput').value === currentPin) {
@@ -196,122 +194,229 @@
             } else { alert("Code PIN incorrect"); }
         }
 
-        function init() { 
-            document.getElementById('tauxInput').value = tauxChange;
-            remplirSelects(); 
-            chargerEleves(); 
+        function init() {
+            updateSchoolUI();
+            remplirSelects();
+            chargerEleves();
             chargerStaff();
             chargerConfig();
-            refreshUI(); 
+            refreshUI();
         }
 
-        function changerTaux() {
-            const val = document.getElementById('tauxInput').value;
-            if(val > 0) {
-                tauxChange = Number(val);
-                localStorage.setItem('t2_taux', tauxChange);
-                alert("Taux mis à jour : 1$ = " + tauxChange + " FC");
-                refreshUI();
-                if(document.getElementById('eleves').style.display !== 'none') chargerEleves();
-                if(document.getElementById('paiements').style.display !== 'none') chargerPaiements();
-            }
+        // --- ECOLE & CONFIG ---
+        function sauverCoords() {
+            schoolData.name = document.getElementById('schoolNameInput').value;
+            schoolData.addr = document.getElementById('schoolAddress').value;
+            schoolData.tel = document.getElementById('schoolPhone').value;
+            localStorage.setItem('t2_sdata', JSON.stringify(schoolData));
+            updateSchoolUI();
+            alert("Coordonnées mises à jour !");
         }
 
-        function formatFC(usd) {
-            return (usd * tauxChange).toLocaleString('fr-FR') + " FC";
+        function updateSchoolUI() {
+            document.getElementById('navSchoolName').innerText = schoolData.name;
+            document.getElementById('loginSchoolName').innerText = "🔐 " + schoolData.name;
+            document.getElementById('schoolNameInput').value = schoolData.name;
+            document.getElementById('schoolAddress').value = schoolData.addr;
+            document.getElementById('schoolPhone').value = schoolData.tel;
+            document.title = schoolData.name + " - GESTION";
         }
 
-        function refreshUI() {
-            document.getElementById('statTotalEleves').innerText = eleves.length;
-            document.getElementById('statTaux').innerText = tauxChange + " FC";
-            document.getElementById('displayTauxNav').innerText = "Taux: 1$ = " + tauxChange + " FC";
-            
-            const m = document.getElementById('moisSelect').value;
-            const totalUSD = eleves.filter(e => e.paiements[m]).reduce((s, e) => s + e.tarif, 0);
-            document.getElementById('statRecettes').innerText = totalUSD + " $";
-            document.getElementById('statRecettesFC').innerText = formatFC(totalUSD);
+        function trierClasses() {
+            classes.sort((a, b) => a.cat - b.cat || a.nom.localeCompare(b.nom));
         }
 
         function remplirSelects() {
-            const htmlClasses = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
-            document.getElementById('classeSelect').innerHTML = htmlClasses;
-            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Choisir Classe --</option>' + htmlClasses;
-            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Afficher Tout --</option>' + htmlClasses;
+            trierClasses();
+            let html = "";
+            const labels = ["", "MATERNELLE", "PRIMAIRE", "SECONDAIRE"];
+            classes.forEach(c => {
+                html += `<option value="${c.nom}">${c.nom}</option>`;
+            });
+            document.getElementById('classeSelect').innerHTML = html;
+            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Choisir Classe --</option>' + html;
+            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Afficher Tout --</option>' + html;
             suggererTarif();
         }
 
+        // --- GESTION ELEVES ---
         function chargerEleves() {
             const filtre = document.getElementById('filtreListeEleve').value;
             const tb = document.querySelector('#tableEleves tbody');
             let liste = (filtre === "TOUS") ? eleves : eleves.filter(e => e.classe === filtre);
-            
-            tb.innerHTML = liste.slice(-50).reverse().map(e => {
+            const cycles = ["", "Maternelle", "Primaire", "Secondaire"];
+
+            tb.innerHTML = liste.slice().reverse().map(e => {
                 const idx = eleves.indexOf(e);
+                const maClasse = classes.find(c => c.nom === e.classe);
                 return `<tr>
-                    <td>${e.nom}</td><td>${e.classe}</td>
-                    <td><b>${e.tarif}$</b><br><small style="color:blue">${formatFC(e.tarif)}</small></td>
+                    <td><b>${e.nom}</b></td><td>${e.classe}</td>
+                    <td>${maClasse ? cycles[maClasse.cat] : '-'}</td>
+                    <td>${e.tarif}$ / ${(e.tarif * tauxChange).toLocaleString()} FC</td>
                     <td><button class="btn-del" onclick="suppEleve(${idx})">X</button></td>
                 </tr>`;
             }).join('');
         }
 
+        function ajouterEleve() {
+            const n = document.getElementById('nom').value;
+            const c = document.getElementById('classeSelect').value;
+            const t = document.getElementById('tarifIndiv').value;
+            if(n && t) {
+                eleves.push({nom:n, classe:c, tarif:Number(t), paiements:{}});
+                sauvegarder(); chargerEleves(); refreshUI();
+                document.getElementById('nom').value = "";
+            }
+        }
+
+        // --- PAIEMENTS & REÇUS ---
         function chargerPaiements() {
             const cl = document.getElementById('filtreClasse').value;
             const m = document.getElementById('moisSelect').value;
             const container = document.getElementById('zoneTablePaiement');
-            const msg = document.getElementById('emptyMsg');
-
-            if(!cl) { container.style.display='none'; msg.style.display='block'; return; }
-            container.style.display='block'; msg.style.display='none';
+            if(!cl) { container.style.display='none'; return; }
+            container.style.display='block';
 
             const liste = eleves.filter(e => e.classe === cl);
             document.querySelector('#tablePaiementFiltree tbody').innerHTML = liste.map(e => {
                 const idx = eleves.indexOf(e);
                 const p = e.paiements[m];
                 return `<tr>
-                    <td>${e.nom}</td>
-                    <td>${e.tarif}$ <br><small>${formatFC(e.tarif)}</small></td>
+                    <td>${e.nom}</td><td>${e.tarif}$</td>
                     <td><button style="background:${p?'#27ae60':'#e74c3c'}" onclick="toggleP(${idx},'${m}')">${p?'PAYÉ':'NON'}</button></td>
-                    <td><button class="btn-print" onclick="printR(${idx},'${m}')">Reçu</button></td>
+                    <td>
+                        <button class="btn-print" onclick="printR(${idx},'${m}')">Reçu</button>
+                        <button class="btn-info" onclick="printLibre(${idx})">Autre Frais</button>
+                    </td>
                 </tr>`;
             }).join('');
             refreshUI();
         }
 
         function printR(idx, m) {
-            const e = eleves[idx]; if(!e.paiements[m]) return alert("Insolvable");
-            const html = `<div style="padding:40px; border:4px double #000; width:500px; margin:auto; font-family:sans-serif;">
-                <h2 style="text-align:center">C.S. LE TREMPLIN 2</h2>
-                <p style="text-align:center; margin:0">Lubumbashi, RDC</p>
-                <hr>
-                <p>Date : ${new Date().toLocaleDateString()}</p>
-                <p>Elève : <b>${e.nom}</b> | Classe : ${e.classe}</p>
-                <p>Motif : Minerval - ${m}</p>
-                <div style="border:2px solid #000; padding:15px; text-align:center; margin:20px 0;">
-                    <h2 style="margin:0">${e.tarif} USD</h2>
-                    <h3 style="margin:5px 0; color:#444;">Équivalent : ${formatFC(e.tarif)}</h3>
-                    <p style="font-size:0.7rem; margin:0">Taux appliqué : 1$ = ${tauxChange} FC</p>
-                </div>
-                <p style="text-align:right">Le Comptable,</p>
+            const e = eleves[idx];
+            if(!e.paiements[m]) return alert("Insolvable");
+            imprimerRecuGlobal(e.nom, e.classe, "MINERVAL - " + m, e.tarif);
+        }
+
+        function printLibre(idx) {
+            const e = eleves[idx];
+            const motif = prompt("Motif du frais (ex: Inscription, Tenue) ?");
+            const montant = prompt("Montant en Dollars ($) ?");
+            if(motif && montant) imprimerRecuGlobal(e.nom, e.classe, motif.toUpperCase(), montant);
+        }
+
+        function imprimerRecuGlobal(nom, cl, motif, montant) {
+            referenceCount++;
+            localStorage.setItem('t2_ref', referenceCount);
+            const ref = `REF-2026-${referenceCount}`;
+            const montantFC = (montant * tauxChange).toLocaleString('fr-FR');
+
+            const html = `
+                <div class="receipt-container">
+                    <div class="receipt-header">
+                        <div>
+                            <div class="receipt-title">PREUVE DE PAIEMENT</div>
+                            <div>ANNÉE SCOLAIRE 2025 - 2026</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-weight:bold">${schoolData.name}</div>
+                            <div style="font-size:0.75rem">${schoolData.addr}</div>
+                            <div style="font-size:0.75rem">Tél : ${schoolData.tel}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <div>Date de paie : ${new Date().toLocaleDateString()}</div>
+                        <div>Référence : <b>${ref}</b></div>
+                    </div>
+                    <div style="border:1px solid #000; padding:10px; margin-bottom:15px;">
+                        <b>Informations sur l'élève</b><br>
+                        Nom complet : ${nom}<br>
+                        Classe : ${cl}
+                    </div>
+                    <table class="receipt-table">
+                        <thead><tr><th>Désignation Frais</th><th>Montant (FC)</th></tr></thead>
+                        <tbody><tr><td>${motif}</td><td>${montantFC} CDF</td></tr></tbody>
+                    </table>
+                    <div class="receipt-total">MONTANT TOTAL PAYÉ : ${montantFC} CDF</div>
+                    <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:0.8rem;">
+                        <div>Signature de l'élève/Parent</div>
+                        <div style="text-align:right">Le Comptable</div>
+                    </div>
+                    <div style="text-align:center; margin-top:20px; font-size:0.6rem; color:#666;">
+                        Document généré par Logiciel de Gestion - ${schoolData.name}
+                    </div>
+                </div>`;
+            document.getElementById('contentToPrint').innerHTML = html;
+            window.print();
+        }
+
+        function imprimerListe(type) {
+            const cl = document.getElementById('filtreClasse').value;
+            const m = document.getElementById('moisSelect').value;
+            const liste = eleves.filter(e => e.classe === cl);
+            const sub = type === 'insolvables' ? liste.filter(e => !e.paiements[m]) : liste.filter(e => e.paiements[m]);
+
+            let html = `<div style="padding:40px">
+                <h2 style="text-align:center">${schoolData.name}</h2>
+                <h3 style="text-align:center; text-decoration:underline;">LISTE DES ${type.toUpperCase()} - ${m.toUpperCase()}</h3>
+                <p>Classe : ${cl} | Date : ${new Date().toLocaleDateString()}</p>
+                <table border="1" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                    <thead><tr><th>N°</th><th>Nom de l'élève</th><th>Tarif ($)</th></tr></thead>
+                    <tbody>${sub.map((e,i)=>`<tr><td>${i+1}</td><td>${e.nom}</td><td>${e.tarif}$</td></tr>`).join('')}</tbody>
+                </table>
             </div>`;
             document.getElementById('contentToPrint').innerHTML = html; window.print();
         }
 
-        function togglP(idx, m) { eleves[idx].paiements[m] = !eleves[idx].paiements[m]; sauvegarder(); chargerPaiements(); refreshUI(); }
-
+        // --- PERSONNEL ---
         function chargerStaff() {
-            if(staff.length === 0) { for(let i=1; i<=23; i++) staff.push({nom:"Agent "+i, salaire:400, avances:0}); }
+            if(staff.length === 0) { for(let i=1; i<=5; i++) staff.push({nom:"Personnel "+i, salaire:300, avances:0}); }
             document.querySelector('#tableStaff tbody').innerHTML = staff.map((p, i) => `<tr>
-                <td>${p.nom}</td>
-                <td>${p.salaire}$ <br><small>${formatFC(p.salaire)}</small></td>
-                <td><b>${p.salaire-p.avances}$</b><br><small>${formatFC(p.salaire-p.avances)}</small></td>
-                <td><button class="btn-main" onclick="staff[${i}].avances+=Number(prompt('Avance $?'));sauvegarder();chargerStaff();">Avance</button></td>
+                <td>${p.nom}</td><td>${p.salaire}$</td>
+                <td style="color:red"><b>${p.avances}$</b></td>
+                <td style="color:green"><b>${p.salaire-p.avances}$</b></td>
+                <td><button class="btn-main" onclick="donnerAvance(${i})">Avance</button></td>
             </tr>`).join('');
         }
 
+        function donnerAvance(i) {
+            const m = Number(prompt('Montant de l\'avance ($) ?'));
+            if(m > 0) { staff[i].avances += m; sauvegarder(); chargerStaff(); }
+        }
+
+        // --- TECH ---
         function chargerConfig() {
+            trierClasses();
+            const cycles = ["", "MATERNELLE", "PRIMAIRE", "SECONDAIRE"];
             document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => 
-                `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="classes.splice(${i},1);sauvegarder();chargerConfig();remplirSelects();">X</button></td></tr>`).join('');
+                `<tr><td>${cycles[c.cat]}</td><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join('');
+        }
+
+        function ajouterClasse() {
+            const n = document.getElementById('newClassName').value;
+            const t = document.getElementById('newClassTarif').value;
+            const cat = Number(document.getElementById('newClassCat').value);
+            if(n && t) {
+                classes.push({cat, nom:n, tarif:Number(t)});
+                sauvegarder(); chargerConfig(); remplirSelects();
+                document.getElementById('newClassName').value = "";
+            }
+        }
+
+        function changerTaux() {
+            tauxChange = Number(document.getElementById('tauxInput').value);
+            localStorage.setItem('t2_taux', tauxChange);
+            refreshUI(); alert("Taux mis à jour !");
+        }
+
+        function refreshUI() {
+            document.getElementById('statTotalEleves').innerText = eleves.length;
+            document.getElementById('statTaux').innerText = tauxChange + " FC";
+            document.getElementById('displayTauxNav').innerText = "Taux: 1$ = " + tauxChange + " FC";
+            const m = document.getElementById('moisSelect').value;
+            const rec = eleves.filter(e => e.paiements[m]).reduce((s, e) => s + e.tarif, 0);
+            document.getElementById('statRecettes').innerText = rec + " $";
         }
 
         function suggererTarif() {
@@ -319,21 +424,13 @@
             if(c) document.getElementById('tarifIndiv').value = c.tarif;
         }
 
-        function ajouterEleve() {
-            const n = document.getElementById('nom').value; const c = document.getElementById('classeSelect').value; const t = document.getElementById('tarifIndiv').value;
-            if(n && t) { eleves.push({nom:n, classe:c, tarif:Number(t), paiements:{}}); sauvegarder(); chargerEleves(); refreshUI(); document.getElementById('nom').value = ""; }
-        }
-
-        function suppEleve(i) { if(confirm("Supprimer?")) { eleves.splice(i, 1); sauvegarder(); chargerEleves(); refreshUI(); } }
-        function changerPin() { const v = document.getElementById('newPin').value; if(v.length >= 4) { currentPin = v; localStorage.setItem('t2_pin', v); alert("Code PIN changé"); } }
-        function showSection(id, btn) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).style.display='block'; btn.classList.add('active'); }
+        function toggleP(idx, m) { eleves[idx].paiements[m] = !eleves[idx].paiements[m]; sauvegarder(); chargerPaiements(); }
+        function suppEleve(i) { if(confirm("Supprimer l'élève ?")) { eleves.splice(i,1); sauvegarder(); chargerEleves(); } }
+        function suppClasse(i) { if(confirm("Supprimer la classe ?")) { classes.splice(i,1); sauvegarder(); chargerConfig(); remplirSelects(); } }
+        function changerPin() { const v = document.getElementById('newPin').value; if(v.length>=4){ currentPin=v; localStorage.setItem('t2_pin',v); alert("PIN changé"); }}
         function sauvegarder() { localStorage.setItem('t2_classes', JSON.stringify(classes)); localStorage.setItem('t2_eleves', JSON.stringify(eleves)); localStorage.setItem('t2_staff', JSON.stringify(staff)); }
-        function resetApp() { if(confirm("Réinitialiser?")) { localStorage.clear(); location.reload(); } }
-        function toggleP(idx, m) { eleves[idx].paiements[m] = !eleves[idx].paiements[m]; sauvegarder(); chargerPaiements(); refreshUI(); }
-        function ajouterClasse() {
-            const n = document.getElementById('newClassName').value; const t = document.getElementById('newClassTarif').value;
-            if(n && t) { classes.push({nom:n, tarif:Number(t)}); sauvegarder(); chargerConfig(); remplirSelects(); }
-        }
+        function showSection(id, btn) { document.querySelectorAll('.section').forEach(s => s.style.display='none'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).style.display='block'; btn.classList.add('active'); }
+        function resetApp() { if(confirm("ATTENTION : Effacer toutes les données ?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
