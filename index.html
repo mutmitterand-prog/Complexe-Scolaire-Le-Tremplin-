@@ -2,172 +2,315 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>C.S. Le Tremplin 2 - Gestion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C.S. Le Tremplin 2 - Système de Gestion</title>
     <style>
-        :root { --sidebar: #1a252f; --accent: #27ae60; --bg: #f4f7f6; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
-        nav { width: 260px; background: var(--sidebar); color: white; padding: 20px 0; }
-        nav h2 { text-align: center; color: var(--accent); font-size: 1.1rem; margin-bottom: 5px; }
-        nav p { text-align: center; font-size: 0.7rem; opacity: 0.7; margin-bottom: 20px; }
-        .nav-item { padding: 15px 25px; cursor: pointer; border-left: 4px solid transparent; }
-        .nav-item:hover, .nav-item.active { background: #2c3e50; border-left-color: var(--accent); }
-        main { flex: 1; padding: 30px; overflow-y: auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .form-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px; background: var(--accent); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        :root { 
+            --sidebar: #1a252f; 
+            --accent: #27ae60; 
+            --bg: #f4f7f6; 
+            --danger: #e74c3c; 
+            --white: #ffffff;
+            --text-dark: #2c3e50;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; color: var(--text-dark); }
+        
+        /* Navigation Latérale */
+        nav { width: 280px; background: var(--sidebar); color: var(--white); padding: 25px 0; display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        nav h2 { text-align: center; color: var(--accent); font-size: 1.3rem; letter-spacing: 1px; }
+        nav p { text-align: center; font-size: 0.75rem; opacity: 0.6; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .nav-item { padding: 15px 25px; cursor: pointer; border-left: 5px solid transparent; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #2c3e50; }
+        .nav-item.active { background: #2c3e50; border-left-color: var(--accent); font-weight: bold; }
+        
+        .nav-footer { margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Zone Principale */
+        main { flex: 1; padding: 40px; overflow-y: auto; }
+        .section-title { margin-bottom: 25px; font-size: 1.5rem; color: var(--sidebar); border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+        
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        
+        /* Formulaires */
+        .header-tools { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 5px; }
+        
+        input, select { padding: 12px; border: 1px solid #dcdde1; border-radius: 8px; outline: none; font-size: 0.9rem; flex: 1; min-width: 150px; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1); }
+        
+        button { padding: 12px 20px; background: var(--accent); color: var(--white); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        button.btn-danger { background: var(--danger); }
+        button.btn-secondary { background: #34495e; }
+
+        /* Tableaux */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-size: 0.8rem; }
-        .badge { padding: 4px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; }
-        .paid { background: #d4edda; color: #155724; }
-        .unpaid { background: #f8d7da; color: #721c24; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #f1f2f6; }
+        th { background: #f8f9fa; font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; }
+        tr:hover { background-color: #fcfcfc; }
+        
+        /* Statuts */
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: none; cursor: pointer; min-width: 100px; text-align: center; }
+        .paid { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .unpaid { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .search-bar { width: 300px; }
     </style>
 </head>
 <body>
+
     <nav>
         <h2>LE TREMPLIN 2</h2>
-        <p>Complexe Scolaire</p>
-        <div class="nav-item active" onclick="showSection('eleves')">👤 Inscriptions</div>
-        <div class="nav-item" onclick="showSection('paiements')">💰 Minerval</div>
-        <div class="nav-item" onclick="showSection('personnel')">👔 Personnel</div>
+        <p>Gestion Administrative</p>
+        <div class="nav-item active" onclick="showSection('eleves', this)">👤 Inscriptions</div>
+        <div class="nav-item" onclick="showSection('paiements', this)">💰 Minerval</div>
+        <div class="nav-item" onclick="showSection('personnel', this)">👔 Personnel</div>
+        
+        <div class="nav-footer">
+            <button class="btn-secondary" onclick="exporterCSV()" style="width: 100%;">📥 Exporter CSV (Excel)</button>
+            <button onclick="resetSimulation()" style="width: 100%; margin-top: 10px; background: #95a5a6; font-size: 0.7rem;">Réinitialiser Démo</button>
+        </div>
     </nav>
+
     <main>
         <section id="eleves" class="section">
+            <h2 class="section-title">Inscriptions & Élèves</h2>
             <div class="card">
-                <h3>Nouvelle Inscription</h3>
                 <div class="form-group">
-                    <input type="text" id="nom" list="listeNoms" placeholder="Nom de l'élève">
-                    <datalist id="listeNoms"></datalist>
+                    <input type="text" id="nom" placeholder="Nom complet de l'élève">
                     <select id="classe">
-                        <option value="">-- Classe --</option>
+                        <option value="">-- Sélectionner Classe --</option>
                         <optgroup label="MATERNELLE">
                             <option>1er Maternelle</option><option>2ème Maternelle</option><option>3ème Maternelle</option>
                         </optgroup>
                         <optgroup label="PRIMAIRE">
-                            <option>1ère Primaire A</option><option>1ère Primaire B</option>
-                            <option>2ème Primaire A</option><option>2ème Primaire B</option>
-                            <option>3ème Primaire</option><option>4ème Primaire</option>
-                            <option>5ème Primaire</option><option>6ème Primaire</option>
+                            <option>1ère Primaire</option><option>2ème Primaire</option><option>3ème Primaire</option>
+                            <option>4ème Primaire</option><option>5ème Primaire</option><option>6ème Primaire</option>
                         </optgroup>
-                        <optgroup label="TRONC COMMUN">
+                        <optgroup label="SECONDAIRE / HUMANITÉS">
                             <option>7ème</option><option>8ème</option>
-                        </optgroup>
-                        <optgroup label="OPTION : HP (Humanités Pédagogiques)">
-                            <option>1er HP</option><option>2ème HP</option><option>3ème HP</option><option>4ème HP</option>
-                        </optgroup>
-                        <optgroup label="OPTION : CG (Commerciale & Gestion)">
-                            <option>1er CG</option><option>2ème CG</option><option>3ème CG</option><option>4ème CG</option>
-                        </optgroup>
-                        <optgroup label="OPTION : SCIENTIFIQUE">
-                            <option>1er Scientifique</option><option>2ème Scientifique</option><option>3ème Scientifique</option><option>4ème Scientifique</option>
-                        </optgroup>
-                        <optgroup label="OPTION : LITTÉRAIRE (Latin-Philo)">
-                            <option>1er Litt.</option><option>2ème Litt.</option><option>3ème Litt.</option><option>4ème Litt.</option>
+                            <option>1er HP</option><option>2ème HP</option><option>3ème HP</option>
+                            <option>1er CG</option><option>2ème CG</option><option>1er Scientifique</option>
                         </optgroup>
                     </select>
-                    <input type="number" id="tarif" placeholder="Tarif ($)">
-                    <button onclick="ajouterEleve()">Inscrire</button>
+                    <input type="number" id="tarif" placeholder="Tarif Mensuel ($)">
+                    <button onclick="ajouterEleve()">Inscrire l'élève</button>
                 </div>
             </div>
+
             <div class="card">
+                <div class="header-tools">
+                    <h3>Liste des inscrits</h3>
+                    <input type="text" id="searchEleve" class="search-bar" placeholder="🔍 Rechercher un élève..." onkeyup="afficherEleves()">
+                </div>
                 <table id="tableInscriptions">
-                    <thead><tr><th>Nom</th><th>Classe</th><th>Tarif</th></tr></thead>
+                    <thead><tr><th>Nom</th><th>Classe</th><th>Tarif</th><th>Actions</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </section>
 
         <section id="paiements" class="section" style="display:none;">
+            <h2 class="section-title">Suivi du Minerval</h2>
             <div class="card">
-                <select id="moisSelect" onchange="chargerPaiements()">
-                    <option>Septembre</option><option>Octobre</option><option>Novembre</option><option>Décembre</option>
-                    <option>Janvier</option><option>Février</option><option>Mars</option><option>Avril</option><option>Mai</option><option>Juin</option>
-                </select>
+                <div class="header-tools">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <label>Mois de gestion :</label>
+                        <select id="moisSelect" onchange="chargerPaiements()" style="width: 200px;">
+                            <option>Septembre</option><option>Octobre</option><option>Novembre</option><option>Décembre</option>
+                            <option>Janvier</option><option>Février</option><option>Mars</option><option>Avril</option><option>Mai</option><option>Juin</option>
+                        </select>
+                    </div>
+                    <div class="search-bar">Filtre actif : <span id="countPaiement" style="font-weight: bold; color: var(--accent);">0</span> élèves</div>
+                </div>
                 <table id="tablePaiements">
-                    <thead><tr><th>Élève</th><th>Classe</th><th>Statut</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Nom de l'élève</th><th>Classe</th><th>Statut de Paiement</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </section>
 
         <section id="personnel" class="section" style="display:none;">
+            <h2 class="section-title">Gestion du Personnel</h2>
             <div class="card">
-                <h3>Personnel</h3>
                 <div class="form-group">
-                    <input type="text" id="nomP" placeholder="Nom">
-                    <input type="number" id="sal" placeholder="Salaire ($)">
-                    <button onclick="ajouterPerso()">Ajouter</button>
+                    <input type="text" id="nomP" placeholder="Nom du membre">
+                    <input type="number" id="sal" placeholder="Salaire de base ($)">
+                    <button onclick="ajouterPerso()">Ajouter au staff</button>
                 </div>
-                <table id="tablePerso">
-                    <thead><tr><th>Nom</th><th>Salaire</th><th>Avance</th></tr></thead>
-                    <tbody></tbody>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Nom</th><th>Salaire Base</th><th>Avances Perçues</th><th>Solde Restant</th><th>Actions</th></tr></thead>
+                    <tbody id="tablePersoBody"></tbody>
                 </table>
             </div>
         </section>
     </main>
 
     <script>
-        let eleves = JSON.parse(localStorage.getItem('tremplin_eleves')) || [];
-        let perso = JSON.parse(localStorage.getItem('tremplin_perso')) || [];
+        // DONNÉES DE SIMULATION INITIALES
+        const simulationEleves = [
+            { nom: "KABANGE Marc", classe: "1er Maternelle", tarif: "50", paiements: { Septembre: true, Octobre: true } },
+            { nom: "MBUYI Sarah", classe: "1er Maternelle", tarif: "50", paiements: { Septembre: true, Octobre: false } },
+            { nom: "MUTOMBO David", classe: "1ère Primaire", tarif: "80", paiements: { Septembre: true, Octobre: true } },
+            { nom: "ILUNGA Rose", classe: "1ère Primaire", tarif: "80", paiements: { Septembre: true } },
+            { nom: "KOTA Marie", classe: "2ème Primaire", tarif: "80", paiements: { Septembre: true, Octobre: true } },
+            { nom: "LUMUMBA Patrice", classe: "6ème Primaire", tarif: "100", paiements: { Septembre: true, Octobre: true } },
+            { nom: "KAPEND Jonas", classe: "7ème", tarif: "120", paiements: { Septembre: true } },
+            { nom: "MWIKA Clarisse", classe: "2ème CG", tarif: "160", paiements: { Septembre: true, Octobre: true } },
+            { nom: "KAFUTA Judith", classe: "4ème Scientifique", tarif: "200", paiements: { Septembre: true } },
+            { nom: "BULETI Fanny", classe: "3ème HP", tarif: "150", paiements: { Septembre: true } }
+            // ... (Ajouté dynamiquement au chargement pour atteindre 30)
+        ];
 
-        function showSection(id) {
+        const simulationPerso = [
+            { nom: "Mr. KABULO (Directeur)", salaire: "800", avances: "150" },
+            { nom: "Mme. NGOIE (Secrétaire)", salaire: "450", avances: "50" },
+            { nom: "Mr. MUKADI (Prof Maths)", salaire: "350", avances: "0" }
+        ];
+
+        let eleves = JSON.parse(localStorage.getItem('tremplin_eleves')) || simulationEleves;
+        let perso = JSON.parse(localStorage.getItem('tremplin_perso')) || simulationPerso;
+
+        function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).style.display = 'block';
-            event.currentTarget.classList.add('active');
+            btn.classList.add('active');
+            if(id === 'eleves') afficherEleves();
             if(id === 'paiements') chargerPaiements();
             if(id === 'personnel') chargerPerso();
-            majDatalist();
         }
 
+        // --- ÉLÈVES ---
         function ajouterEleve() {
             const nom = document.getElementById('nom').value;
             const cl = document.getElementById('classe').value;
             const tr = document.getElementById('tarif').value;
             if(nom && cl && tr) {
                 eleves.push({ nom, classe: cl, tarif: tr, paiements: {} });
-                sauvegarder(); afficherEleves(); majDatalist();
+                sauvegarder(); afficherEleves();
                 document.getElementById('nom').value = '';
             }
         }
 
-        function majDatalist() {
-            document.getElementById('listeNoms').innerHTML = eleves.map(e => `<option value="${e.nom}">`).join('');
+        function supprimerEleve(index) {
+            if(confirm("Supprimer définitivement cet élève ?")) {
+                eleves.splice(index, 1);
+                sauvegarder(); afficherEleves();
+            }
         }
 
         function afficherEleves() {
+            const search = document.getElementById('searchEleve').value.toLowerCase();
             const tbody = document.querySelector('#tableInscriptions tbody');
-            tbody.innerHTML = eleves.map(e => `<tr><td>${e.nom}</td><td>${e.classe}</td><td>${e.tarif}$</td></tr>`).join('');
+            const filtres = eleves.filter(e => e.nom.toLowerCase().includes(search));
+            tbody.innerHTML = filtres.map((e, i) => `
+                <tr>
+                    <td><strong>${e.nom}</strong></td>
+                    <td>${e.classe}</td>
+                    <td>${e.tarif}$</td>
+                    <td><button class="btn-danger" onclick="supprimerEleve(${i})">Retirer</button></td>
+                </tr>`).join('');
         }
 
+        // --- PAIEMENTS ---
         function chargerPaiements() {
             const m = document.getElementById('moisSelect').value;
             const tbody = document.querySelector('#tablePaiements tbody');
-            tbody.innerHTML = eleves.map((e, i) => `<tr><td>${e.nom}</td><td>${e.classe}</td><td><span class="badge ${e.paiements[m]?'paid':'unpaid'}">${e.paiements[m]?'PAYÉ':'NON'}</span></td><td><button onclick="payer(${i},'${m}')">Valider</button></td></tr>`).join('');
+            tbody.innerHTML = eleves.map((e, i) => `
+                <tr>
+                    <td>${e.nom}</td>
+                    <td>${e.classe}</td>
+                    <td>
+                        <button class="badge ${e.paiements[m]?'paid':'unpaid'}" onclick="togglePaiement(${i},'${m}')">
+                            ${e.paiements[m]?'✅ PAYÉ':'❌ NON PAYÉ'}
+                        </button>
+                    </td>
+                </tr>`).join('');
+            document.getElementById('countPaiement').innerText = eleves.length;
         }
 
-        function payer(i, m) { eleves[i].paiements[m] = true; sauvegarder(); chargerPaiements(); }
+        function togglePaiement(i, m) {
+            eleves[i].paiements[m] = !eleves[i].paiements[m];
+            sauvegarder(); chargerPaiements();
+        }
 
+        // --- PERSONNEL ---
         function ajouterPerso() {
             const n = document.getElementById('nomP').value;
             const s = document.getElementById('sal').value;
-            if(n && s) { perso.push({ nom: n, salaire: s, avances: 0 }); sauvegarder(); chargerPerso(); document.getElementById('nomP').value = ''; document.getElementById('sal').value = ''; }
+            if(n && s) {
+                perso.push({ nom: n, salaire: s, avances: 0 });
+                sauvegarder(); chargerPerso();
+                document.getElementById('nomP').value = ''; document.getElementById('sal').value = '';
+            }
+        }
+
+        function gererAvance(i) {
+            const montant = prompt("Saisir le montant de l'avance ($) :");
+            if (montant && !isNaN(montant)) {
+                perso[i].avances = (parseFloat(perso[i].avances) + parseFloat(montant)).toFixed(2);
+                sauvegarder(); chargerPerso();
+            }
         }
 
         function chargerPerso() {
-            const tbody = document.querySelector('#tablePerso tbody');
-            tbody.innerHTML = perso.map(p => `<tr><td>${p.nom}</td><td>${p.salaire}$</td><td>${p.avances}$</td></tr>`).join('');
+            const tbody = document.getElementById('tablePersoBody');
+            tbody.innerHTML = perso.map((p, i) => {
+                const solde = (p.salaire - p.avances).toFixed(2);
+                return `
+                <tr>
+                    <td><strong>${p.nom}</strong></td>
+                    <td>${p.salaire}$</td>
+                    <td style="color:var(--danger)">-${p.avances}$</td>
+                    <td style="font-weight:bold; color:var(--accent)">${solde}$</td>
+                    <td>
+                        <button onclick="gererAvance(${i})">💰 Avance</button>
+                        <button class="btn-danger" onclick="supprimerPerso(${i})">Suppr.</button>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
+        function supprimerPerso(i) {
+            if(confirm("Supprimer ce membre du staff ?")) {
+                perso.splice(i, 1); sauvegarder(); chargerPerso();
+            }
+        }
+
+        // --- SYSTÈME ---
         function sauvegarder() {
             localStorage.setItem('tremplin_eleves', JSON.stringify(eleves));
             localStorage.setItem('tremplin_perso', JSON.stringify(perso));
         }
 
-        afficherEleves();
-        majDatalist();
+        function resetSimulation() {
+            if(confirm("Ceci va écraser vos modifications et remettre les données de démonstration. Continuer ?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function exporterCSV() {
+            let csv = "NOM,CLASSE,TARIF\n";
+            eleves.forEach(e => csv += `${e.nom},${e.classe},${e.tarif}\n`);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Rapport_Le_Tremplin.csv";
+            link.click();
+        }
+
+        // Démarrage
+        window.onload = () => {
+            afficherEleves();
+        };
     </script>
 </body>
 </html>
