@@ -7,140 +7,128 @@
     <style>
         :root { 
             --sidebar: #1a252f; --accent: #27ae60; --bg: #f4f7f6; 
-            --danger: #e74c3c; --warning: #f39c12; --info: #3498db; --white: #ffffff;
-            --finance: #8e44ad;
+            --danger: #e74c3c; --warning: #f39c12; --info: #3498db; 
+            --white: #ffffff; --finance: #8e44ad; --dark-blue: #2c3e50;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
 
-        /* OVERLAYS ET CONNEXION */
-        #loginOverlay, #financeOverlay { position: fixed; inset: 0; background: var(--sidebar); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; }
+        /* OVERLAYS SÉCURITÉ */
+        #loginOverlay, #financeOverlay { 
+            position: fixed; inset: 0; background: var(--sidebar); z-index: 9999; 
+            display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; 
+        }
         #financeOverlay { background: rgba(26, 37, 47, 0.98); display: none; }
-        .login-box { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; backdrop-filter: blur(10px); text-align: center; width: 350px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box { 
+            background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; 
+            backdrop-filter: blur(15px); text-align: center; width: 400px; 
+            border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
+        }
 
-        /* BARRE LATERALE */
-        nav { width: 260px; background: var(--sidebar); color: white; padding: 20px 0; display: flex; flex-direction: column; flex-shrink: 0; }
-        .nav-logo { text-align: center; margin-bottom: 20px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .nav-logo div { width: 50px; height: 50px; background: var(--accent); border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
-        nav h2 { text-align: center; color: var(--accent); margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; padding: 0 10px; }
-        .nav-item { padding: 15px 25px; cursor: pointer; border-left: 4px solid transparent; transition: 0.3s; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover, .nav-item.active { background: #2c3e50; border-left-color: var(--accent); }
-        .nav-item.finance-btn { color: #d487ff; font-weight: bold; border-left-color: var(--finance); }
+        /* NAVIGATION */
+        nav { width: 280px; background: var(--sidebar); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .nav-logo { text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-logo div { width: 60px; height: 60px; background: var(--accent); border-radius: 15px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; }
+        .nav-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; color: #bdc3c7; display: flex; align-items: center; gap: 12px; }
+        .nav-item:hover, .nav-item.active { background: #2c3e50; color: white; border-left: 4px solid var(--accent); }
+        .nav-item.finance-btn { color: #d487ff; border-left-color: var(--finance); }
+
+        /* CONTENU */
+        main { flex: 1; padding: 30px; overflow-y: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; border-bottom: 4px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
         
-        /* CONTENU PRINCIPAL */
-        main { flex: 1; padding: 25px; overflow-y: auto; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 15px; border-radius: 8px; border-bottom: 4px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stat-card h4 { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-card p { font-size: 1.4rem; font-weight: bold; color: #2c3e50; }
-
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; min-width: 150px; outline: none; }
-        input:focus { border-color: var(--accent); }
-
-        /* TABLEAUX */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        th { background: #f8f9fa; color: #555; text-transform: uppercase; font-size: 0.75rem; }
-        tbody tr:nth-child(even) { background-color: #fafafa; }
-        tbody tr:hover { background-color: #f1f9f5; }
-
-        /* BOUTONS */
-        button { padding: 8px 12px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; min-width: 140px; }
+        
+        button { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; color: white; transition: 0.2s; }
         .btn-main { background: var(--accent); }
         .btn-del { background: var(--danger); }
         .btn-print { background: var(--warning); }
         .btn-info { background: var(--info); }
         .btn-finance { background: var(--finance); }
-        button:active { transform: scale(0.95); }
 
-        /* PROGRESS BAR */
-        .progress-container { background: #eee; border-radius: 10px; height: 8px; margin: 10px 0; overflow: hidden; }
-        .progress-bar { background: var(--accent); height: 100%; width: 0%; transition: 0.5s; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #f9fafb; color: #666; font-size: 0.75rem; text-transform: uppercase; }
 
-        /* RAPPORT FINANCE STYLE */
-        .finance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .bilan-net { text-align: center; background: #2c3e50; color:white; padding: 20px; border-radius: 10px; margin-top: 20px; }
-
-        /* REÇU STYLE */
-        .receipt-container { width: 100%; max-width: 600px; margin: auto; padding: 30px; border: 2px solid #000; background: white; color: #000; }
-        .receipt-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .receipt-title { font-weight: bold; font-size: 1.2rem; }
-        .receipt-table { width: 100%; margin-top: 20px; border-top: 1px dashed #000; border-collapse: collapse; }
-        .receipt-table th, .receipt-table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-
+        #printArea { display: none; }
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            #printArea { display: block !important; position: absolute; left:0; top:0; width:100%; }
         }
-        #printArea { display: none; }
     </style>
 </head>
-<body>
+<body onmousemove="resetIdleTimer()" onkeypress="resetIdleTimer()">
 
     <div id="loginOverlay">
         <div class="login-box">
-            <h2 id="loginSchoolName">🔐 CHARGEMENT...</h2>
-            <input type="password" id="pinInput" placeholder="Code PIN" style="width: 100%; text-align: center; margin: 15px 0; font-size: 1.2rem;">
-            <button class="btn-main" onclick="checkLogin()" style="width: 100%; padding: 12px;">OUVRIR LA SESSION</button>
+            <h2 id="loginSchoolName">Chargement...</h2>
+            <p id="loginYearDisplay" style="margin-bottom: 20px; color: var(--accent);"></p>
+            <input type="password" id="pinInput" placeholder="PIN d'accès" autocomplete="new-password" style="width: 100%; text-align: center; font-size: 1.5rem; margin-bottom: 20px;">
+            <button class="btn-main" onclick="checkLogin()" style="width: 100%;">DÉVERROUILLER</button>
         </div>
     </div>
 
     <div id="financeOverlay">
         <div class="login-box">
-            <h2 style="color: #d487ff;">🔑 DIRECTION</h2>
-            <p style="margin-bottom: 15px; font-size: 0.8rem;">Entrez le mot de passe Administrateur</p>
-            <input type="password" id="adminPassInput" placeholder="Mot de passe Admin" style="width: 100%; text-align: center; margin-bottom: 15px;">
+            <h2 id="overlayTitle">🔑 ZONE PROTÉGÉE</h2>
+            <p style="margin-bottom: 15px; font-size: 0.9rem;">Entrez le mot de passe Administrateur</p>
+            <input type="password" id="adminPassInput" placeholder="Mot de passe" autocomplete="new-password" style="width: 100%; text-align: center; margin-bottom: 20px;">
             <div style="display: flex; gap: 10px; width: 100%;">
-                <button class="btn-del" onclick="closeFinance()" style="flex:1">RETOUR</button>
-                <button class="btn-finance" onclick="checkAdminAccess()" style="flex:1">VALIDER</button>
+                <button class="btn-del" onclick="closeFinance()" style="flex:1">ANNULER</button>
+                <button class="btn-finance" onclick="checkAdminAccess()" style="flex:1">CONFIRMER</button>
             </div>
         </div>
     </div>
 
     <nav>
         <div class="nav-logo">
-            <div id="logoInitial">E</div>
-            <h2 id="navSchoolName">ÉCOLE</h2>
+            <div id="logoInitial">?</div>
+            <h2 id="navSchoolName" style="font-size: 1rem;">ÉCOLE</h2>
+            <small id="navYear">2025-2026</small>
         </div>
-        <div class="nav-item active" onclick="showSection('eleves', this)">👤 Inscriptions</div>
-        <div class="nav-item" onclick="showSection('paiements', this)">💰 Minerval & FC</div>
-        <div class="nav-item" onclick="showSection('personnel', this)">👔 Staff & Salaires</div>
-        <div class="nav-item finance-btn" onclick="askFinance(this)">📊 Rapport Finance</div>
-        <div class="nav-item" onclick="showSection('config', this)">⚙️ Configuration</div>
-        <div style="margin-top: auto; padding: 20px;">
-            <p id="displayTauxNav" style="font-size: 0.7rem; color: #95a5a6; margin-bottom: 10px;">Taux: 1$ = 2250 FC</p>
-            <button onclick="resetApp()" style="background:#444; width:100%; font-size: 0.7rem; opacity: 0.5;">RÉINITIALISER TOUT</button>
+        <div class="nav-item active" onclick="showSection('eleves', this)"><span>👤</span> Inscriptions</div>
+        <div class="nav-item" onclick="showSection('paiements', this)"><span>💰</span> Frais Scolaires</div>
+        <div class="nav-item" onclick="showSection('personnel', this)"><span>👔</span> Personnel & Paie</div>
+        <div class="nav-item" onclick="showSection('recus_divers', this)"><span>📄</span> Reçus Divers</div>
+        <div class="nav-item finance-btn" onclick="askSecurity('finance', this)"><span>📊</span> Rapport Finance</div>
+        <div class="nav-item" onclick="askSecurity('config', this)"><span>⚙️</span> Configuration</div>
+        
+        <div style="margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+            <p id="displayTauxNav" style="font-size: 0.7rem; color: #7f8c8d;">Taux: 1$ = 2500 FC</p>
+            <button onclick="location.reload()" style="background:none; color:var(--danger); font-size:0.7rem; padding:0; margin-top:10px;">🔒 Déconnexion Manuelle</button>
         </div>
     </nav>
 
     <main>
         <div class="stats-grid">
-            <div class="stat-card"><h4>Effectif Total</h4><p id="statTotalEleves">0</p></div>
-            <div class="stat-card" style="border-color:var(--warning)"><h4>Recettes (Mois)</h4><p id="statRecettes">0 $</p></div>
-            <div class="stat-card" style="border-color:var(--finance)"><h4>Caisse Net</h4><p id="statCaisse">0 $</p></div>
-            <div class="stat-card" style="border-color:var(--info)"><h4>Taux</h4><p id="statTaux">2250 FC</p></div>
+            <div class="stat-card"><h4>Effectif</h4><p id="statTotalEleves">0</p></div>
+            <div class="stat-card" style="border-color: var(--warning);"><h4>Recette Mois</h4><p id="statRecettes">0 $</p></div>
+            <div class="stat-card" style="border-color: var(--finance);"><h4>Caisse</h4><p id="statCaisse">0 $</p></div>
+            <div class="stat-card" style="border-color: var(--info);"><h4>Taux</h4><p id="statTaux">2500 FC</p></div>
         </div>
 
         <section id="eleves" class="section">
             <div class="card">
-                <h3>Nouvelle Inscription</h3>
+                <h3>Inscrire un élève</h3>
                 <div class="form-group">
-                    <input type="text" id="nom" placeholder="Nom complet de l'élève">
+                    <input type="text" id="nom" placeholder="Nom complet">
                     <select id="classeSelect" onchange="suggererTarif()"></select>
-                    <input type="number" id="tarifIndiv" placeholder="Tarif Admis $">
-                    <button class="btn-main" onclick="ajouterEleve()">Inscrire l'élève</button>
+                    <input type="number" id="tarifIndiv" placeholder="Tarif Scolarité ($)">
+                    <button class="btn-main" onclick="ajouterEleve()">Inscrire</button>
                 </div>
             </div>
             <div class="card">
-                <div class="form-group">
-                    <label>Filtrer par classe :</label>
-                    <select id="filtreListeEleve" onchange="chargerEleves()"></select>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>Liste des Élèves</h3>
+                    <button class="btn-info" onclick="exportListe('eleves')">📥 Télécharger Liste</button>
                 </div>
+                <select id="filtreListeEleve" onchange="chargerEleves()" style="width:100%; margin-bottom:15px;"></select>
                 <table id="tableEleves">
-                    <thead><tr><th>Nom</th><th>Classe</th><th>Cycle</th><th>Tarif ($)</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Nom</th><th>Classe</th><th>Tarif</th><th>Action</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -148,417 +136,298 @@
 
         <section id="paiements" class="section" style="display:none;">
             <div class="card">
+                <h3>Suivi Minerval (12 Mois)</h3>
                 <div class="form-group">
                     <select id="moisSelect" onchange="chargerPaiements()">
                         <option>Septembre</option><option>Octobre</option><option>Novembre</option><option>Décembre</option>
                         <option>Janvier</option><option>Février</option><option>Mars</option><option>Avril</option>
-                        <option>Mai</option><option>Juin</option>
+                        <option>Mai</option><option>Juin</option><option>Juillet</option><option>Août</option>
                     </select>
                     <select id="filtreClasse" onchange="chargerPaiements()"></select>
                 </div>
                 <div id="zoneTablePaiement" style="display:none;">
-                    <div style="margin-bottom:20px; background:#f9f9f9; padding:15px; border-radius:8px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold;">
-                            <span>Taux de recouvrement du mois</span>
-                            <span id="txtRecouvrement">0%</span>
-                        </div>
-                        <div class="progress-container"><div id="barRecouvrement" class="progress-bar"></div></div>
-                    </div>
                     <div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <button class="btn-del" onclick="imprimerListe('insolvables')">📥 Liste Insolvables</button>
-                        <button class="btn-main" onclick="imprimerListe('solvables')">📥 Liste En Règle</button>
+                        <button class="btn-del" onclick="imprimerListe('insolvables')">Insolvables</button>
+                        <button class="btn-main" onclick="imprimerListe('solvables')">Solvables</button>
                     </div>
                     <table id="tablePaiementFiltree">
-                        <thead><tr><th>Elève</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Élève</th><th>État</th><th>Actions</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
+        <section id="recus_divers" class="section" style="display:none;">
+            <div class="card">
+                <h3>Générer un Reçu Spécifique</h3>
+                <div class="form-group">
+                    <input type="text" id="diversNom" placeholder="Nom du bénéficiaire">
+                    <input type="text" id="diversMotif" placeholder="Motif (ex: Frais d'État)">
+                    <input type="number" id="diversMontant" placeholder="Montant ($)">
+                    <button class="btn-print" onclick="imprimerRecuLibre()">Générer & Imprimer</button>
+                </div>
+            </div>
+        </section>
+
         <section id="personnel" class="section" style="display:none;">
             <div class="card">
-                <h3>Paie du Personnel & Avances</h3>
-                <div class="form-group" style="background:#f1f9f5; padding:15px; border-radius:8px; border:1px dashed var(--accent);">
+                <h3>Membres du Personnel</h3>
+                <div class="form-group">
                     <input type="text" id="staffNom" placeholder="Nom complet">
-                    <input type="number" id="staffSalaire" placeholder="Salaire de base $">
-                    <button class="btn-main" onclick="ajouterStaff()">Ajouter au Staff</button>
+                    <input type="number" id="staffSalaire" placeholder="Salaire ($)">
+                    <button class="btn-main" onclick="ajouterStaff()">Enregistrer</button>
                 </div>
                 <table id="tableStaff">
-                    <thead><tr><th>Nom</th><th>Salaire ($)</th><th>Avances Cumulées</th><th>Net à Payer</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Nom</th><th>Salaire</th><th>Avances</th><th>Reste</th><th>Action</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </section>
 
         <section id="finance" class="section" style="display:none;">
-            <div class="card" style="border-left: 5px solid var(--finance); display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="color: var(--finance);">📊 RAPPORT FINANCIER GÉNÉRAL</h2>
-                <button class="btn-print" onclick="window.print()">Imprimer Rapport</button>
-            </div>
-            <div class="finance-grid">
-                <div class="card">
-                    <h3>💵 Recettes (Minerval)</h3>
-                    <div id="financeRecettesMois" style="max-height: 250px; overflow-y: auto; margin-bottom:10px; font-size:0.9rem;"></div>
-                    <div style="border-top:1px solid #eee; padding-top:10px; font-weight:bold;">
-                        <p>Total Scolarité : <span id="finTotalMinerval">0</span> $</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>📉 Sorties & Salaires</h3>
-                    <p>Masse Salariale : <b id="finMasseSal">0</b> $</p>
-                    <p>Avances payées : <b id="finTotalAvances" style="color:var(--danger)">0</b> $</p>
-                    <p>Reste à payer : <b id="finResteStaff">0</b> $</p>
-                </div>
-            </div>
-            <div class="bilan-net">
-                <p style="text-transform:uppercase; letter-spacing:1px; opacity:0.8;">Liquidité Disponible (Net en Caisse)</p>
-                <div id="finBilanNet" style="font-size: 3.5rem; font-weight: 800; color: var(--accent); margin:10px 0;">0 $</div>
-                <p id="finBilanFC" style="opacity:0.9; font-size:1.3rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">0 FC</p>
+            <div class="card"><h3>Bilan Financier Global</h3><div id="financeRecettesMois"></div></div>
+            <div class="card" style="background:var(--dark-blue); color:white; text-align:center; padding:40px;">
+                <p>TOTAL DISPONIBLE EN CAISSE</p>
+                <h1 id="finBilanNet" style="font-size:3.5rem; color:var(--accent);">0 $</h1>
+                <h3 id="finBilanFC" style="opacity:0.7;">0 CDF</h3>
             </div>
         </section>
 
         <section id="config" class="section" style="display:none;">
-            <div class="card" style="background: #e1f5fe;">
-                <h3>🏫 Coordonnées de l'École</h3>
+            <div class="card">
+                <h3>Identité & Année Scolaire</h3>
                 <div class="form-group">
                     <input type="text" id="schoolNameInput" placeholder="Nom de l'école">
-                    <input type="text" id="schoolAddress" placeholder="Adresse complète">
-                    <input type="text" id="schoolPhone" placeholder="Téléphones">
-                    <button class="btn-info" onclick="sauverCoords()">Enregistrer les infos</button>
+                    <input type="text" id="schoolYearInput" placeholder="Année">
+                    <input type="number" id="tauxInput" placeholder="Taux (FC)">
+                    <button class="btn-info" onclick="sauverConfigGale()">Enregistrer</button>
                 </div>
             </div>
             <div class="card">
-                <h3>⚙️ Taux & Sécurité</h3>
+                <h3>Modifier les Mots de Passe</h3>
                 <div class="form-group">
-                    <label>Taux Actuel : 1$ = </label><input type="number" id="tauxInput">
-                    <button class="btn-main" onclick="changerTaux()">Mettre à jour le taux</button>
-                </div>
-                <div class="finance-grid" style="margin-top:15px;">
-                    <div style="background:#f9f9f9; padding:15px; border-radius:5px;">
-                        <h4>Accès Page (PIN)</h4>
-                        <input type="password" id="newPin" placeholder="Nouveau Code PIN" style="width:100%; margin-top:5px;">
-                        <button class="btn-info" onclick="changerPin()" style="width:100%; margin-top:5px;">Changer PIN</button>
-                    </div>
-                    <div style="background:#f9f9f9; padding:15px; border-radius:5px;">
-                        <h4>Accès Finance (ADMIN)</h4>
-                        <input type="password" id="newAdminPass" placeholder="Nouveau Pass Admin" style="width:100%; margin-top:5px;">
-                        <button class="btn-finance" onclick="changerAdminPass()" style="width:100%; margin-top:5px;">Changer Pass Admin</button>
-                    </div>
+                    <select id="typePass">
+                        <option value="pin">Code PIN (Accès)</option>
+                        <option value="admin">Pass Admin (Finance)</option>
+                    </select>
+                    <input type="password" id="oldPass" placeholder="Ancien">
+                    <input type="password" id="newPass" placeholder="Nouveau">
+                    <button class="btn-del" onclick="modifierSecurite()">Mettre à jour</button>
                 </div>
             </div>
             <div class="card">
-                <h3>Gestion des Classes et Tarifs</h3>
-                <div class="form-group" style="background:#f8f9fa; padding:15px; border-radius:8px;">
-                    <select id="newClassCat">
-                        <option value="1">1. MATERNELLE</option>
-                        <option value="2">2. PRIMAIRE</option>
-                        <option value="3">3. SECONDAIRE</option>
-                    </select>
-                    <input type="text" id="newClassName" placeholder="Ex: 1ère Primaire A">
-                    <input type="number" id="newClassTarif" placeholder="Prix Minerval $">
-                    <button class="btn-main" onclick="ajouterClasse()">Ajouter la Classe</button>
+                <h3>Classes & Tarifs</h3>
+                <div class="form-group">
+                    <input type="text" id="newClassName" placeholder="Classe">
+                    <input type="number" id="newClassTarif" placeholder="Prix ($)">
+                    <button class="btn-main" onclick="ajouterClasse()">Ajouter</button>
                 </div>
-                <table id="tableConfigClasses"><thead><tr><th>Cycle</th><th>Classe</th><th>Prix ($)</th><th>Action</th></tr></thead><tbody></tbody></table>
+                <table id="tableConfigClasses">
+                    <thead><tr><th>Classe</th><th>Prix</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
+            <button class="btn-del" onclick="resetApp()" style="width:100%; padding:15px; opacity:0.5;">RÉINITIALISER TOUT LE SYSTÈME</button>
         </section>
     </main>
 
     <div id="printArea"><div id="contentToPrint"></div></div>
 
     <script>
-        // --- BASE DE DONNÉES ET ÉTAT ---
-        let currentPin = localStorage.getItem('t2_pin') || "1234";
-        let adminPass = localStorage.getItem('t2_admin') || "ADMIN2026";
-        let tauxChange = Number(localStorage.getItem('t2_taux')) || 2250;
-        let schoolData = JSON.parse(localStorage.getItem('t2_sdata')) || { name: "C.S. LE TREMPLIN 2", addr: "Lubumbashi, RDC", tel: "" };
-        let classes = JSON.parse(localStorage.getItem('t2_classes')) || [
-            {cat: 2, nom: "1ère Primaire", tarif: 50},
-            {cat: 2, nom: "6ème Primaire", tarif: 75}
-        ];
-        let eleves = JSON.parse(localStorage.getItem('t2_eleves')) || [];
-        let staff = JSON.parse(localStorage.getItem('t2_staff')) || [];
-        let referenceCount = Number(localStorage.getItem('t2_ref')) || 1000;
+        // --- LOGIQUE DE DÉCONNEXION AUTOMATIQUE (5 MIN) ---
+        let idleTime = 0;
+        function resetIdleTimer() { idleTime = 0; }
+        setInterval(function() {
+            idleTime++;
+            if (idleTime >= 300) { // 300 secondes = 5 minutes
+                location.reload(); 
+            }
+        }, 1000);
+
+        // --- BASE DE DONNÉES ---
+        let currentPin = localStorage.getItem('p_pin') || "1234";
+        let adminPass = localStorage.getItem('p_admin') || "1234";
+        let taux = Number(localStorage.getItem('p_taux')) || 2500;
+        let school = JSON.parse(localStorage.getItem('p_school')) || { name: "C.S. LE TREMPLIN 2", year: "2025-2026" };
+        let classes = JSON.parse(localStorage.getItem('p_classes')) || [];
+        let eleves = JSON.parse(localStorage.getItem('p_eleves')) || [];
+        let staff = JSON.parse(localStorage.getItem('p_staff')) || [];
+        let refID = Number(localStorage.getItem('p_ref')) || 1000;
 
         function checkLogin() {
             if(document.getElementById('pinInput').value === currentPin) {
-                document.getElementById('loginOverlay').style.display='none';
+                document.getElementById('loginOverlay').style.display = 'none';
                 init();
-            } else { alert("Code PIN incorrect"); }
+            } else alert("Code PIN incorrect");
         }
 
-        function init() {
-            updateSchoolUI();
-            remplirSelects();
-            chargerEleves();
-            chargerStaff();
-            chargerConfig();
-            refreshUI();
-            document.getElementById('tauxInput').value = tauxChange;
+        let pendingSection = ""; let pendingBtn = null;
+        function askSecurity(sec, btn) {
+            pendingSection = sec; pendingBtn = btn;
+            document.getElementById('financeOverlay').style.display = 'flex';
         }
+        function closeFinance() { document.getElementById('financeOverlay').style.display = 'none'; document.getElementById('adminPassInput').value=""; }
 
-        // --- NAVIGATION ET SÉCURITÉ DIRECTION ---
-        let currentSectionBtn = null;
-        function askFinance(btn) { 
-            currentSectionBtn = btn; 
-            document.getElementById('financeOverlay').style.display = 'flex'; 
-        }
-        function closeFinance() { document.getElementById('financeOverlay').style.display = 'none'; }
-        
         function checkAdminAccess() {
             if(document.getElementById('adminPassInput').value === adminPass) {
                 closeFinance();
-                showSection('finance', currentSectionBtn);
-                calculerFinance();
-            } else { alert("Accès Direction Refusé"); }
+                showSection(pendingSection, pendingBtn);
+                if(pendingSection === 'finance') calculerFinance();
+            } else alert("Mot de passe Administrateur incorrect");
         }
 
-        // --- GESTION ÉCOLE ET CONFIG ---
-        function sauverCoords() {
-            schoolData.name = document.getElementById('schoolNameInput').value;
-            schoolData.addr = document.getElementById('schoolAddress').value;
-            schoolData.tel = document.getElementById('schoolPhone').value;
-            localStorage.setItem('t2_sdata', JSON.stringify(schoolData));
-            updateSchoolUI();
-            alert("Coordonnées enregistrées !");
+        function init() {
+            updateUI(); remplirSelects(); chargerEleves(); chargerStaff(); chargerConfig(); refreshStats();
         }
 
-        function updateSchoolUI() {
-            document.getElementById('navSchoolName').innerText = schoolData.name;
-            document.getElementById('loginSchoolName').innerText = "🔐 " + schoolData.name;
-            document.getElementById('logoInitial').innerText = schoolData.name.charAt(0).toUpperCase();
-            document.title = schoolData.name + " - GESTION";
+        function updateUI() {
+            document.getElementById('navSchoolName').innerText = school.name;
+            document.getElementById('loginSchoolName').innerText = school.name;
+            document.getElementById('navYear').innerText = school.year;
+            document.getElementById('loginYearDisplay').innerText = "Année Scolaire : " + school.year;
+            document.getElementById('logoInitial').innerText = school.name[0];
+            document.getElementById('schoolNameInput').value = school.name;
+            document.getElementById('schoolYearInput').value = school.year;
+            document.getElementById('tauxInput').value = taux;
         }
 
-        function remplirSelects() {
-            classes.sort((a, b) => a.cat - b.cat || a.nom.localeCompare(b.nom));
-            let html = "";
-            classes.forEach(c => { html += `<option value="${c.nom}">${c.nom}</option>`; });
-            document.getElementById('classeSelect').innerHTML = html;
-            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Choisir Classe --</option>' + html;
-            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Afficher Tout --</option>' + html;
-            suggererTarif();
-        }
-
-        // --- GESTION ELEVES ---
         function chargerEleves() {
-            const filtre = document.getElementById('filtreListeEleve').value;
+            const f = document.getElementById('filtreListeEleve').value;
             const tb = document.querySelector('#tableEleves tbody');
-            let liste = (filtre === "TOUS") ? eleves : eleves.filter(e => e.classe === filtre);
-            const cycles = ["", "Maternelle", "Primaire", "Secondaire"];
-
-            tb.innerHTML = liste.slice().reverse().map(e => {
-                const idx = eleves.indexOf(e);
-                const maClasse = classes.find(c => c.nom === e.classe);
-                return `<tr>
-                    <td><b>${e.nom}</b></td><td>${e.classe}</td>
-                    <td>${maClasse ? cycles[maClasse.cat] : '-'}</td>
-                    <td>${e.tarif}$</td>
-                    <td><button class="btn-del" onclick="suppEleve(${idx})">X</button></td>
-                </tr>`;
-            }).join('');
+            let list = (f === "TOUS") ? eleves : eleves.filter(e => e.classe === f);
+            tb.innerHTML = list.map((e, i) => `<tr><td><b>${e.nom}</b></td><td>${e.classe}</td><td>${e.tarif}$</td><td><button class="btn-del" onclick="supprimerEleve(${i})">X</button></td></tr>`).join('');
         }
 
         function ajouterEleve() {
             const n = document.getElementById('nom').value.toUpperCase();
             const c = document.getElementById('classeSelect').value;
             const t = document.getElementById('tarifIndiv').value;
-            if(n && t) {
-                eleves.push({nom:n, classe:c, tarif:Number(t), paiements:{}});
-                sauvegarder(); chargerEleves(); refreshUI();
-                document.getElementById('nom').value = "";
-            } else { alert("Remplissez le nom et le tarif !"); }
+            if(n && t) { eleves.push({nom: n, classe: c, tarif: Number(t), paiements: {}}); sauver(); chargerEleves(); refreshStats(); document.getElementById('nom').value = ""; }
         }
 
-        // --- PAIEMENTS ET RECOUVREMENT ---
         function chargerPaiements() {
             const cl = document.getElementById('filtreClasse').value;
             const m = document.getElementById('moisSelect').value;
-            const container = document.getElementById('zoneTablePaiement');
-            if(!cl) { container.style.display='none'; return; }
-            container.style.display='block';
-
-            const liste = eleves.filter(e => e.classe === cl);
-            const payes = liste.filter(e => e.paiements[m]).length;
-            const pourcent = liste.length ? Math.round((payes / liste.length) * 100) : 0;
-            
-            document.getElementById('txtRecouvrement').innerText = pourcent + "%";
-            document.getElementById('barRecouvrement').style.width = pourcent + "%";
-
-            document.querySelector('#tablePaiementFiltree tbody').innerHTML = liste.map(e => {
-                const idx = eleves.indexOf(e);
-                const p = e.paiements[m];
-                return `<tr>
-                    <td>${e.nom}</td><td>${e.tarif}$</td>
-                    <td><b style="color:${p?'#27ae60':'#e74c3c'}">${p?'PAYÉ':'INSOLVABLE'}</b></td>
-                    <td>
-                        <button class="${p?'btn-main':'btn-del'}" onclick="toggleP(${idx},'${m}')">${p?'Annuler':'Valider'}</button>
-                        <button class="btn-print" onclick="printR(${idx},'${m}')">Reçu</button>
-                    </td>
-                </tr>`;
+            if(!cl) return;
+            document.getElementById('zoneTablePaiement').style.display = 'block';
+            const list = eleves.filter(e => e.classe === cl);
+            document.querySelector('#tablePaiementFiltree tbody').innerHTML = list.map(e => {
+                const paye = e.paiements[m];
+                return `<tr><td>${e.nom}</td><td style="color:${paye?'green':'red'}"><b>${paye?'PAYÉ':'NON'}</b></td><td><button class="${paye?'btn-del':'btn-main'}" onclick="togglePay('${e.nom}','${m}')">${paye?'Annuler':'Payer'}</button> <button class="btn-print" onclick="imprimerRecu('${e.nom}','${m}','SCOLARITE')">Reçu</button></td></tr>`;
             }).join('');
-            refreshUI();
         }
 
-        function toggleP(idx, m) { 
-            eleves[idx].paiements[m] = !eleves[idx].paiements[m]; 
-            sauvegarder(); 
-            chargerPaiements(); 
+        function togglePay(nom, mois) {
+            const e = eleves.find(x => x.nom === nom);
+            e.paiements[mois] = !e.paiements[mois];
+            sauver(); chargerPaiements(); refreshStats();
         }
 
-        function printR(idx, m) {
-            const e = eleves[idx];
-            if(!e.paiements[m]) return alert("Veuillez d'abord valider le paiement.");
-            referenceCount++;
-            localStorage.setItem('t2_ref', referenceCount);
-            
-            const montantFC = (e.tarif * tauxChange).toLocaleString('fr-FR');
-            const html = `
-                <div class="receipt-container">
-                    <div class="receipt-header">
-                        <div>
-                            <div class="receipt-title">PREUVE DE PAIEMENT</div>
-                            <div>ANNÉE SCOLAIRE 2025 - 2026</div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-weight:bold">${schoolData.name}</div>
-                            <div style="font-size:0.75rem">${schoolData.addr}</div>
-                        </div>
-                    </div>
-                    <p>Référence : <b>REF-${referenceCount}</b> | Date : ${new Date().toLocaleDateString()}</p>
-                    <div style="border:1px solid #000; padding:15px; margin:20px 0;">
-                        NOM : <b>${e.nom}</b><br>
-                        CLASSE : <b>${e.classe}</b><br>
-                        MOTIF : <b>MINERVAL ${m.toUpperCase()}</b>
-                    </div>
-                    <h2 style="text-align:right">MONTANT : ${montantFC} CDF (${e.tarif} $)</h2>
-                    <div style="margin-top:50px; display:flex; justify-content:space-between;">
-                        <p style="border-top:1px solid #000; width:150px; text-align:center;">Le Parent</p>
-                        <p style="border-top:1px solid #000; width:150px; text-align:center;">La Direction</p>
-                    </div>
-                </div>`;
-            document.getElementById('contentToPrint').innerHTML = html;
-            window.print();
+        function imprimerRecu(nom, mois, type, montantLibre = null) {
+            const e = eleves.find(x => x.nom === nom);
+            const mnt = montantLibre || e.tarif;
+            refID++; localStorage.setItem('p_ref', refID);
+            const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><p>Reçu N° ${refID}</p><hr><p>Nom: ${nom}</p><p>Motif: ${type} (${mois})</p><h3>Montant: ${mnt}$ / ${mnt*taux} FC</h3><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
+            document.getElementById('contentToPrint').innerHTML = html; window.print();
         }
 
-        // --- GESTION DU PERSONNEL ---
+        function imprimerRecuLibre() {
+            const n = document.getElementById('diversNom').value;
+            const m = document.getElementById('diversMotif').value;
+            const v = document.getElementById('diversMontant').value;
+            if(n && m && v) {
+                refID++; localStorage.setItem('p_ref', refID);
+                const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><h3>REÇU DIVERS N° ${refID}</h3><hr><p>Bénéficiaire: ${n.toUpperCase()}</p><p>Motif: ${m}</p><h2>Total: ${v}$</h2><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
+                document.getElementById('contentToPrint').innerHTML = html; window.print();
+            }
+        }
+
         function ajouterStaff() {
             const n = document.getElementById('staffNom').value;
             const s = Number(document.getElementById('staffSalaire').value);
-            if(n && s > 0) {
-                staff.push({nom:n, salaire:s, avances:0});
-                sauvegarder(); chargerStaff();
-                document.getElementById('staffNom').value = "";
-                document.getElementById('staffSalaire').value = "";
-            }
+            if(n && s) { staff.push({nom:n, salaire:s, avances:0}); sauver(); chargerStaff(); }
         }
 
         function chargerStaff() {
-            document.querySelector('#tableStaff tbody').innerHTML = staff.map((p, i) => `<tr>
-                <td>${p.nom}</td><td>${p.salaire}$</td>
-                <td style="color:red"><b>${p.avances}$</b></td>
-                <td style="color:green"><b>${p.salaire-p.avances}$</b></td>
-                <td><button class="btn-main" onclick="donnerAvance(${i})">Avance</button></td>
-            </tr>`).join('');
+            document.querySelector('#tableStaff tbody').innerHTML = staff.map((s, i) => `<tr><td>${s.nom}</td><td>${s.salaire}$</td><td>${s.avances}$</td><td>${s.salaire - s.avances}$</td><td><button class="btn-main" onclick="payerStaff(${i})">Paie</button></td></tr>`).join('');
         }
 
-        function donnerAvance(i) {
-            const m = Number(prompt('Montant de l\'avance en Dollars ($) ?'));
-            if(m > 0) { staff[i].avances += m; sauvegarder(); chargerStaff(); refreshUI(); }
+        function payerStaff(i) {
+            const v = Number(prompt("Montant ($) ?"));
+            if(v) { staff[i].avances += v; sauver(); chargerStaff(); refreshStats(); if(confirm("Imprimer reçu ?")) imprimerRecu(staff[i].nom, "AVANCE", "Salaire", v); }
         }
 
-        // --- FINANCE ET CALCULS ---
         function calculerFinance() {
-            const moisL = ["Septembre", "Octobre", "Novembre", "Décembre", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin"];
-            let tMinerval = 0, html = "<ul>";
-            
-            moisL.forEach(m => {
-                let recMois = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0);
-                tMinerval += recMois;
-                if(recMois > 0) html += `<li style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f0f0f0;"><span>${m}</span><b>${recMois} $</b></li>`;
+            const mois = ["Septembre", "Octobre", "Novembre", "Décembre", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août"];
+            let total = 0; let html = "<table>";
+            mois.forEach(m => {
+                let mRec = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0);
+                total += mRec; if(mRec > 0) html += `<tr><td>${m}</td><td>${mRec} $</td></tr>`;
             });
-            
-            const mSal = staff.reduce((s,p) => s + p.salaire, 0);
-            const tAv = staff.reduce((s,p) => s + p.avances, 0);
-            const netCaisse = (tMinerval - tAv);
-
-            document.getElementById('financeRecettesMois').innerHTML = html + "</ul>";
-            document.getElementById('finTotalMinerval').innerText = tMinerval;
-            document.getElementById('finMasseSal').innerText = mSal;
-            document.getElementById('finTotalAvances').innerText = tAv;
-            document.getElementById('finResteStaff').innerText = (mSal - tAv);
-            document.getElementById('finBilanNet').innerText = netCaisse + " $";
-            document.getElementById('finBilanFC').innerText = (netCaisse * tauxChange).toLocaleString('fr-FR') + " FC (Taux: " + tauxChange + ")";
+            const totAv = staff.reduce((s, x) => s + x.avances, 0);
+            document.getElementById('finBilanNet').innerText = (total - totAv) + " $";
+            document.getElementById('finBilanFC').innerText = ((total - totAv) * taux).toLocaleString() + " CDF";
+            document.getElementById('financeRecettesMois').innerHTML = html + "</table>";
         }
 
-        // --- TECHNIQUE ET STORAGE ---
-        function chargerConfig() {
-            const cycles = ["", "MATERNELLE", "PRIMAIRE", "SECONDAIRE"];
-            document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => 
-                `<tr><td>${cycles[c.cat]}</td><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join('');
+        function sauverConfigGale() {
+            school.name = document.getElementById('schoolNameInput').value;
+            school.year = document.getElementById('schoolYearInput').value;
+            taux = Number(document.getElementById('tauxInput').value);
+            localStorage.setItem('p_taux', taux); localStorage.setItem('p_school', JSON.stringify(school));
+            updateUI(); refreshStats(); alert("Enregistré");
         }
 
-        function ajouterClasse() {
-            const n = document.getElementById('newClassName').value;
-            const t = document.getElementById('newClassTarif').value;
-            const cat = Number(document.getElementById('newClassCat').value);
-            if(n && t) {
-                classes.push({cat, nom:n, tarif:Number(t)});
-                sauvegarder(); chargerConfig(); remplirSelects();
-                document.getElementById('newClassName').value = "";
-            }
+        function modifierSecurite() {
+            const type = document.getElementById('typePass').value;
+            const old = document.getElementById('oldPass').value;
+            const nouv = document.getElementById('newPass').value;
+            if(type === 'pin' && old === currentPin) { currentPin = nouv; localStorage.setItem('p_pin', nouv); alert("PIN changé"); }
+            else if(type === 'admin' && old === adminPass) { adminPass = nouv; localStorage.setItem('p_admin', nouv); alert("Pass Admin changé"); }
+            else alert("Ancien code faux");
         }
 
-        function refreshUI() {
+        function refreshStats() {
             document.getElementById('statTotalEleves').innerText = eleves.length;
-            document.getElementById('statTaux').innerText = tauxChange + " FC";
-            document.getElementById('displayTauxNav').innerText = "Taux: 1$ = " + tauxChange + " FC";
-            
+            document.getElementById('statTaux').innerText = taux + " FC";
+            let tRec = 0; eleves.forEach(e => { tRec += Object.values(e.paiements).filter(v => v).length * e.tarif; });
+            const tAv = staff.reduce((s, x) => s + x.avances, 0);
+            document.getElementById('statCaisse').innerText = (tRec - tAv) + " $";
+        }
+
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).style.display = 'block'; if(btn) btn.classList.add('active');
+        }
+
+        function remplirSelects() {
+            let h = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
+            document.getElementById('classeSelect').innerHTML = h;
+            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Classe --</option>' + h;
+            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Toute l\'école --</option>' + h;
+        }
+
+        function chargerConfig() {
+            document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join('');
+        }
+
+        function suppClasse(i) { classes.splice(i,1); sauver(); chargerConfig(); remplirSelects(); }
+        function supprimerEleve(i) { if(confirm("Supprimer ?")) { eleves.splice(i,1); sauver(); chargerEleves(); refreshStats(); } }
+        function sauver() { localStorage.setItem('p_eleves', JSON.stringify(eleves)); localStorage.setItem('p_classes', JSON.stringify(classes)); localStorage.setItem('p_staff', JSON.stringify(staff)); }
+        function resetApp() { if(confirm("TOUT EFFACER ?")) { localStorage.clear(); location.reload(); } }
+        function suggererTarif() { const c = classes.find(x => x.nom === document.getElementById('classeSelect').value); if(c) document.getElementById('tarifIndiv').value = c.tarif; }
+        
+        function imprimerListe(type) {
+            const cl = document.getElementById('filtreClasse').value;
             const m = document.getElementById('moisSelect').value;
-            const recMois = eleves.filter(e => e.paiements[m]).reduce((s, e) => s + e.tarif, 0);
-            document.getElementById('statRecettes').innerText = recMois + " $";
-
-            let totalRecettes = 0;
-            eleves.forEach(e => { Object.values(e.paiements).forEach(p => { if(p) totalRecettes += e.tarif; }); });
-            const totalAvances = staff.reduce((s, p) => s + p.avances, 0);
-            document.getElementById('statCaisse').innerText = (totalRecettes - totalAvances) + " $";
+            let list = eleves.filter(e => e.classe === cl);
+            if(type === 'solvables') list = list.filter(e => e.paiements[m]); else list = list.filter(e => !e.paiements[m]);
+            let html = `<h2>${type.toUpperCase()} - ${cl} (${m})</h2><table border="1" style="width:100%;">`;
+            list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`);
+            document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print();
         }
-
-        function changerTaux() {
-            tauxChange = Number(document.getElementById('tauxInput').value);
-            localStorage.setItem('t2_taux', tauxChange);
-            refreshUI(); alert("Taux mis à jour !");
-        }
-
-        function changerPin() { 
-            const v = document.getElementById('newPin').value; 
-            if(v.length >= 4){ currentPin = v; localStorage.setItem('t2_pin', v); alert("Code PIN modifié !"); }
-        }
-
-        function changerAdminPass() { 
-            const v = document.getElementById('newAdminPass').value; 
-            if(v.length >= 4){ adminPass = v; localStorage.setItem('t2_admin', v); alert("Pass Admin modifié !"); }
-        }
-
-        function suggererTarif() {
-            const c = classes.find(cl => cl.nom === document.getElementById('classeSelect').value);
-            if(c) document.getElementById('tarifIndiv').value = c.tarif;
-        }
-
-        function suppEleve(i) { if(confirm("Supprimer cet élève ?")) { eleves.splice(i,1); sauvegarder(); chargerEleves(); refreshUI(); } }
-        function suppClasse(i) { if(confirm("Supprimer cette classe ?")) { classes.splice(i,1); sauvegarder(); chargerConfig(); remplirSelects(); } }
-        function sauvegarder() { 
-            localStorage.setItem('t2_classes', JSON.stringify(classes)); 
-            localStorage.setItem('t2_eleves', JSON.stringify(eleves)); 
-            localStorage.setItem('t2_staff', JSON.stringify(staff)); 
-        }
-        function showSection(id, btn) { 
-            document.querySelectorAll('.section').forEach(s => s.style.display='none'); 
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
-            document.getElementById(id).style.display='block'; 
-            if(btn) btn.classList.add('active'); 
-        }
-        function resetApp() { if(confirm("ATTENTION : Cela va effacer toutes les inscriptions et paiements. Continuer ?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
