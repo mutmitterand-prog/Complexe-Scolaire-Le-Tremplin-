@@ -53,6 +53,8 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         th { background: #f9fafb; color: #666; font-size: 0.75rem; text-transform: uppercase; }
 
+        .hist-table td { font-size: 0.8rem; }
+
         #printArea { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -192,6 +194,15 @@
                 <h1 id="finBilanNet" style="font-size:3.5rem; color:var(--accent);">0 $</h1>
                 <h3 id="finBilanFC" style="opacity:0.7;">0 CDF</h3>
             </div>
+            <div class="card">
+                <h3>Historique des Reçus (Preuves)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="hist-table" id="tableHistorique">
+                        <thead><tr><th>Réf</th><th>Date</th><th>Nom</th><th>Motif</th><th>Montant</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
         <section id="config" class="section" style="display:none;">
@@ -235,17 +246,10 @@
     <div id="printArea"><div id="contentToPrint"></div></div>
 
     <script>
-        // --- LOGIQUE DE DÉCONNEXION AUTOMATIQUE (5 MIN) ---
         let idleTime = 0;
         function resetIdleTimer() { idleTime = 0; }
-        setInterval(function() {
-            idleTime++;
-            if (idleTime >= 300) { // 300 secondes = 5 minutes
-                location.reload(); 
-            }
-        }, 1000);
+        setInterval(() => { idleTime++; if (idleTime >= 300) location.reload(); }, 1000);
 
-        // --- BASE DE DONNÉES ---
         let currentPin = localStorage.getItem('p_pin') || "1234";
         let adminPass = localStorage.getItem('p_admin') || "1234";
         let taux = Number(localStorage.getItem('p_taux')) || 2500;
@@ -253,43 +257,21 @@
         let classes = JSON.parse(localStorage.getItem('p_classes')) || [];
         let eleves = JSON.parse(localStorage.getItem('p_eleves')) || [];
         let staff = JSON.parse(localStorage.getItem('p_staff')) || [];
+        let historique = JSON.parse(localStorage.getItem('p_hist')) || [];
         let refID = Number(localStorage.getItem('p_ref')) || 1000;
 
-        function checkLogin() {
-            if(document.getElementById('pinInput').value === currentPin) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                init();
-            } else alert("Code PIN incorrect");
-        }
-
+        function checkLogin() { if(document.getElementById('pinInput').value === currentPin) { document.getElementById('loginOverlay').style.display = 'none'; init(); } else alert("Code PIN incorrect"); }
         let pendingSection = ""; let pendingBtn = null;
-        function askSecurity(sec, btn) {
-            pendingSection = sec; pendingBtn = btn;
-            document.getElementById('financeOverlay').style.display = 'flex';
-        }
+        function askSecurity(sec, btn) { pendingSection = sec; pendingBtn = btn; document.getElementById('financeOverlay').style.display = 'flex'; }
         function closeFinance() { document.getElementById('financeOverlay').style.display = 'none'; document.getElementById('adminPassInput').value=""; }
+        function checkAdminAccess() { if(document.getElementById('adminPassInput').value === adminPass) { closeFinance(); showSection(pendingSection, pendingBtn); if(pendingSection === 'finance') calculerFinance(); } else alert("Mot de passe Administrateur incorrect"); }
 
-        function checkAdminAccess() {
-            if(document.getElementById('adminPassInput').value === adminPass) {
-                closeFinance();
-                showSection(pendingSection, pendingBtn);
-                if(pendingSection === 'finance') calculerFinance();
-            } else alert("Mot de passe Administrateur incorrect");
-        }
-
-        function init() {
-            updateUI(); remplirSelects(); chargerEleves(); chargerStaff(); chargerConfig(); refreshStats();
-        }
-
+        function init() { updateUI(); remplirSelects(); chargerEleves(); chargerStaff(); chargerConfig(); refreshStats(); }
         function updateUI() {
-            document.getElementById('navSchoolName').innerText = school.name;
-            document.getElementById('loginSchoolName').innerText = school.name;
-            document.getElementById('navYear').innerText = school.year;
-            document.getElementById('loginYearDisplay').innerText = "Année Scolaire : " + school.year;
-            document.getElementById('logoInitial').innerText = school.name[0];
-            document.getElementById('schoolNameInput').value = school.name;
-            document.getElementById('schoolYearInput').value = school.year;
-            document.getElementById('tauxInput').value = taux;
+            document.getElementById('navSchoolName').innerText = school.name; document.getElementById('loginSchoolName').innerText = school.name;
+            document.getElementById('navYear').innerText = school.year; document.getElementById('loginYearDisplay').innerText = "Année Scolaire : " + school.year;
+            document.getElementById('logoInitial').innerText = school.name[0]; document.getElementById('schoolNameInput').value = school.name;
+            document.getElementById('schoolYearInput').value = school.year; document.getElementById('tauxInput').value = taux;
         }
 
         function chargerEleves() {
@@ -298,136 +280,66 @@
             let list = (f === "TOUS") ? eleves : eleves.filter(e => e.classe === f);
             tb.innerHTML = list.map((e, i) => `<tr><td><b>${e.nom}</b></td><td>${e.classe}</td><td>${e.tarif}$</td><td><button class="btn-del" onclick="supprimerEleve(${i})">X</button></td></tr>`).join('');
         }
-
-        function ajouterEleve() {
-            const n = document.getElementById('nom').value.toUpperCase();
-            const c = document.getElementById('classeSelect').value;
-            const t = document.getElementById('tarifIndiv').value;
-            if(n && t) { eleves.push({nom: n, classe: c, tarif: Number(t), paiements: {}}); sauver(); chargerEleves(); refreshStats(); document.getElementById('nom').value = ""; }
-        }
-
+        function ajouterEleve() { const n = document.getElementById('nom').value.toUpperCase(); const c = document.getElementById('classeSelect').value; const t = document.getElementById('tarifIndiv').value; if(n && t) { eleves.push({nom: n, classe: c, tarif: Number(t), paiements: {}}); sauver(); chargerEleves(); refreshStats(); document.getElementById('nom').value = ""; } }
         function chargerPaiements() {
-            const cl = document.getElementById('filtreClasse').value;
-            const m = document.getElementById('moisSelect').value;
-            if(!cl) return;
-            document.getElementById('zoneTablePaiement').style.display = 'block';
-            const list = eleves.filter(e => e.classe === cl);
-            document.querySelector('#tablePaiementFiltree tbody').innerHTML = list.map(e => {
-                const paye = e.paiements[m];
-                return `<tr><td>${e.nom}</td><td style="color:${paye?'green':'red'}"><b>${paye?'PAYÉ':'NON'}</b></td><td><button class="${paye?'btn-del':'btn-main'}" onclick="togglePay('${e.nom}','${m}')">${paye?'Annuler':'Payer'}</button> <button class="btn-print" onclick="imprimerRecu('${e.nom}','${m}','SCOLARITE')">Reçu</button></td></tr>`;
-            }).join('');
+            const cl = document.getElementById('filtreClasse').value; const m = document.getElementById('moisSelect').value; if(!cl) return;
+            document.getElementById('zoneTablePaiement').style.display = 'block'; const list = eleves.filter(e => e.classe === cl);
+            document.querySelector('#tablePaiementFiltree tbody').innerHTML = list.map(e => { const paye = e.paiements[m]; return `<tr><td>${e.nom}</td><td style="color:${paye?'green':'red'}"><b>${paye?'PAYÉ':'NON'}</b></td><td><button class="${paye?'btn-del':'btn-main'}" onclick="togglePay('${e.nom}','${m}')">${paye?'Annuler':'Payer'}</button> <button class="btn-print" onclick="imprimerRecu('${e.nom}','${m}','SCOLARITE')">Reçu</button></td></tr>`; }).join('');
         }
+        function togglePay(nom, mois) { const e = eleves.find(x => x.nom === nom); e.paiements[mois] = !e.paiements[mois]; sauver(); chargerPaiements(); refreshStats(); }
 
-        function togglePay(nom, mois) {
-            const e = eleves.find(x => x.nom === nom);
-            e.paiements[mois] = !e.paiements[mois];
-            sauver(); chargerPaiements(); refreshStats();
+        function enregistrerHist(nom, motif, montant) {
+            refID++; localStorage.setItem('p_ref', refID);
+            const entry = { ref: `R-${refID}`, date: new Date().toLocaleString('fr-FR'), nom: nom, motif: motif, mnt: montant };
+            historique.unshift(entry); if(historique.length > 500) historique.pop();
+            localStorage.setItem('p_hist', JSON.stringify(historique));
+            return entry.ref;
         }
 
         function imprimerRecu(nom, mois, type, montantLibre = null) {
-            const e = eleves.find(x => x.nom === nom);
+            const e = eleves.find(x => x.nom === nom) || {tarif: montantLibre};
             const mnt = montantLibre || e.tarif;
-            refID++; localStorage.setItem('p_ref', refID);
-            const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><p>Reçu N° ${refID}</p><hr><p>Nom: ${nom}</p><p>Motif: ${type} (${mois})</p><h3>Montant: ${mnt}$ / ${mnt*taux} FC</h3><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
+            const ref = enregistrerHist(nom, `${type} (${mois})`, mnt);
+            const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><p>Reçu N° ${ref}</p><hr><p>Nom: ${nom}</p><p>Motif: ${type} (${mois})</p><h3>Montant: ${mnt}$ / ${mnt*taux} FC</h3><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
             document.getElementById('contentToPrint').innerHTML = html; window.print();
         }
 
         function imprimerRecuLibre() {
-            const n = document.getElementById('diversNom').value;
-            const m = document.getElementById('diversMotif').value;
-            const v = document.getElementById('diversMontant').value;
+            const n = document.getElementById('diversNom').value; const m = document.getElementById('diversMotif').value; const v = document.getElementById('diversMontant').value;
             if(n && m && v) {
-                refID++; localStorage.setItem('p_ref', refID);
-                const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><h3>REÇU DIVERS N° ${refID}</h3><hr><p>Bénéficiaire: ${n.toUpperCase()}</p><p>Motif: ${m}</p><h2>Total: ${v}$</h2><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
+                const ref = enregistrerHist(n.toUpperCase(), m, v);
+                const html = `<div style="border:3px solid #000; padding:25px; width:500px; margin:auto;"><h2>${school.name}</h2><h3>REÇU DIVERS N° ${ref}</h3><hr><p>Bénéficiaire: ${n.toUpperCase()}</p><p>Motif: ${m}</p><h2>Total: ${v}$</h2><p>Date: ${new Date().toLocaleDateString()}</p></div>`;
                 document.getElementById('contentToPrint').innerHTML = html; window.print();
             }
         }
 
-        function ajouterStaff() {
-            const n = document.getElementById('staffNom').value;
-            const s = Number(document.getElementById('staffSalaire').value);
-            if(n && s) { staff.push({nom:n, salaire:s, avances:0}); sauver(); chargerStaff(); }
-        }
-
-        function chargerStaff() {
-            document.querySelector('#tableStaff tbody').innerHTML = staff.map((s, i) => `<tr><td>${s.nom}</td><td>${s.salaire}$</td><td>${s.avances}$</td><td>${s.salaire - s.avances}$</td><td><button class="btn-main" onclick="payerStaff(${i})">Paie</button></td></tr>`).join('');
-        }
-
-        function payerStaff(i) {
-            const v = Number(prompt("Montant ($) ?"));
-            if(v) { staff[i].avances += v; sauver(); chargerStaff(); refreshStats(); if(confirm("Imprimer reçu ?")) imprimerRecu(staff[i].nom, "AVANCE", "Salaire", v); }
-        }
+        function chargerStaff() { document.querySelector('#tableStaff tbody').innerHTML = staff.map((s, i) => `<tr><td>${s.nom}</td><td>${s.salaire}$</td><td>${s.avances}$</td><td>${s.salaire - s.avances}$</td><td><button class="btn-main" onclick="payerStaff(${i})">Paie</button></td></tr>`).join(''); }
+        function ajouterStaff() { const n = document.getElementById('staffNom').value; const s = Number(document.getElementById('staffSalaire').value); if(n && s) { staff.push({nom:n, salaire:s, avances:0}); sauver(); chargerStaff(); } }
+        function payerStaff(i) { const v = Number(prompt("Montant ($) ?")); if(v) { staff[i].avances += v; sauver(); chargerStaff(); refreshStats(); if(confirm("Imprimer reçu ?")) imprimerRecu(staff[i].nom, "AVANCE", "Salaire", v); } }
 
         function calculerFinance() {
             const mois = ["Septembre", "Octobre", "Novembre", "Décembre", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août"];
             let total = 0; let html = "<table>";
-            mois.forEach(m => {
-                let mRec = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0);
-                total += mRec; if(mRec > 0) html += `<tr><td>${m}</td><td>${mRec} $</td></tr>`;
-            });
+            mois.forEach(m => { let mRec = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0); total += mRec; if(mRec > 0) html += `<tr><td>${m}</td><td>${mRec} $</td></tr>`; });
             const totAv = staff.reduce((s, x) => s + x.avances, 0);
             document.getElementById('finBilanNet').innerText = (total - totAv) + " $";
             document.getElementById('finBilanFC').innerText = ((total - totAv) * taux).toLocaleString() + " CDF";
             document.getElementById('financeRecettesMois').innerHTML = html + "</table>";
+            document.getElementById('tableHistorique').querySelector('tbody').innerHTML = historique.map(h => `<tr><td>${h.ref}</td><td>${h.date}</td><td>${h.nom}</td><td>${h.motif}</td><td>${h.mnt}$</td></tr>`).join('');
         }
 
-        function sauverConfigGale() {
-            school.name = document.getElementById('schoolNameInput').value;
-            school.year = document.getElementById('schoolYearInput').value;
-            taux = Number(document.getElementById('tauxInput').value);
-            localStorage.setItem('p_taux', taux); localStorage.setItem('p_school', JSON.stringify(school));
-            updateUI(); refreshStats(); alert("Enregistré");
-        }
-
-        function modifierSecurite() {
-            const type = document.getElementById('typePass').value;
-            const old = document.getElementById('oldPass').value;
-            const nouv = document.getElementById('newPass').value;
-            if(type === 'pin' && old === currentPin) { currentPin = nouv; localStorage.setItem('p_pin', nouv); alert("PIN changé"); }
-            else if(type === 'admin' && old === adminPass) { adminPass = nouv; localStorage.setItem('p_admin', nouv); alert("Pass Admin changé"); }
-            else alert("Ancien code faux");
-        }
-
-        function refreshStats() {
-            document.getElementById('statTotalEleves').innerText = eleves.length;
-            document.getElementById('statTaux').innerText = taux + " FC";
-            let tRec = 0; eleves.forEach(e => { tRec += Object.values(e.paiements).filter(v => v).length * e.tarif; });
-            const tAv = staff.reduce((s, x) => s + x.avances, 0);
-            document.getElementById('statCaisse').innerText = (tRec - tAv) + " $";
-        }
-
-        function showSection(id, btn) {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).style.display = 'block'; if(btn) btn.classList.add('active');
-        }
-
-        function remplirSelects() {
-            let h = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
-            document.getElementById('classeSelect').innerHTML = h;
-            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Classe --</option>' + h;
-            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Toute l\'école --</option>' + h;
-        }
-
-        function chargerConfig() {
-            document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join('');
-        }
-
+        function sauverConfigGale() { school.name = document.getElementById('schoolNameInput').value; school.year = document.getElementById('schoolYearInput').value; taux = Number(document.getElementById('tauxInput').value); localStorage.setItem('p_taux', taux); localStorage.setItem('p_school', JSON.stringify(school)); updateUI(); refreshStats(); alert("Enregistré"); }
+        function modifierSecurite() { const t = document.getElementById('typePass').value; const o = document.getElementById('oldPass').value; const n = document.getElementById('newPass').value; if(t === 'pin' && o === currentPin) { currentPin = n; localStorage.setItem('p_pin', n); alert("PIN changé"); } else if(t === 'admin' && o === adminPass) { adminPass = n; localStorage.setItem('p_admin', n); alert("Pass Admin changé"); } else alert("Code faux"); }
+        function refreshStats() { document.getElementById('statTotalEleves').innerText = eleves.length; document.getElementById('statTaux').innerText = taux + " FC"; let tRec = 0; eleves.forEach(e => { tRec += Object.values(e.paiements).filter(v => v).length * e.tarif; }); const tAv = staff.reduce((s, x) => s + x.avances, 0); document.getElementById('statCaisse').innerText = (tRec - tAv) + " $"; }
+        function showSection(id, btn) { document.querySelectorAll('.section').forEach(s => s.style.display = 'none'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).style.display = 'block'; if(btn) btn.classList.add('active'); }
+        function remplirSelects() { let h = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join(''); document.getElementById('classeSelect').innerHTML = h; document.getElementById('filtreClasse').innerHTML = '<option value="">-- Classe --</option>' + h; document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Toute l\'école --</option>' + h; }
+        function chargerConfig() { document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join(''); }
         function suppClasse(i) { classes.splice(i,1); sauver(); chargerConfig(); remplirSelects(); }
         function supprimerEleve(i) { if(confirm("Supprimer ?")) { eleves.splice(i,1); sauver(); chargerEleves(); refreshStats(); } }
         function sauver() { localStorage.setItem('p_eleves', JSON.stringify(eleves)); localStorage.setItem('p_classes', JSON.stringify(classes)); localStorage.setItem('p_staff', JSON.stringify(staff)); }
         function resetApp() { if(confirm("TOUT EFFACER ?")) { localStorage.clear(); location.reload(); } }
         function suggererTarif() { const c = classes.find(x => x.nom === document.getElementById('classeSelect').value); if(c) document.getElementById('tarifIndiv').value = c.tarif; }
-        
-        function imprimerListe(type) {
-            const cl = document.getElementById('filtreClasse').value;
-            const m = document.getElementById('moisSelect').value;
-            let list = eleves.filter(e => e.classe === cl);
-            if(type === 'solvables') list = list.filter(e => e.paiements[m]); else list = list.filter(e => !e.paiements[m]);
-            let html = `<h2>${type.toUpperCase()} - ${cl} (${m})</h2><table border="1" style="width:100%;">`;
-            list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`);
-            document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print();
-        }
+        function imprimerListe(type) { const cl = document.getElementById('filtreClasse').value; const m = document.getElementById('moisSelect').value; let list = eleves.filter(e => e.classe === cl); if(type === 'solvables') list = list.filter(e => e.paiements[m]); else list = list.filter(e => !e.paiements[m]); let html = `<h2>${type.toUpperCase()} - ${cl} (${m})</h2><table border="1" style="width:100%;">`; list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`); document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print(); }
     </script>
 </body>
 </html>
