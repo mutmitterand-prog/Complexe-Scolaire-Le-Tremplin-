@@ -53,8 +53,6 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
         th { background: #f9fafb; color: #666; font-size: 0.75rem; text-transform: uppercase; }
 
-        .hist-table td { font-size: 0.8rem; }
-
         #printArea { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -230,7 +228,7 @@
             <div class="card">
                 <h3>Classes & Tarifs</h3>
                 <div class="form-group">
-                    <input type="text" id="newClassName" placeholder="Classe">
+                    <input type="text" id="newClassName" placeholder="Classe (ex: 1ère EB)">
                     <input type="number" id="newClassTarif" placeholder="Prix ($)">
                     <button class="btn-main" onclick="ajouterClasse()">Ajouter</button>
                 </div>
@@ -250,6 +248,7 @@
         function resetIdleTimer() { idleTime = 0; }
         setInterval(() => { idleTime++; if (idleTime >= 300) location.reload(); }, 1000);
 
+        // CHARGEMENT DES DONNÉES
         let currentPin = localStorage.getItem('p_pin') || "1234";
         let adminPass = localStorage.getItem('p_admin') || "1234";
         let taux = Number(localStorage.getItem('p_taux')) || 2500;
@@ -260,18 +259,76 @@
         let historique = JSON.parse(localStorage.getItem('p_hist')) || [];
         let refID = Number(localStorage.getItem('p_ref')) || 1000;
 
+        // LOGIN & SÉCURITÉ
         function checkLogin() { if(document.getElementById('pinInput').value === currentPin) { document.getElementById('loginOverlay').style.display = 'none'; init(); } else alert("Code PIN incorrect"); }
         let pendingSection = ""; let pendingBtn = null;
         function askSecurity(sec, btn) { pendingSection = sec; pendingBtn = btn; document.getElementById('financeOverlay').style.display = 'flex'; }
         function closeFinance() { document.getElementById('financeOverlay').style.display = 'none'; document.getElementById('adminPassInput').value=""; }
         function checkAdminAccess() { if(document.getElementById('adminPassInput').value === adminPass) { closeFinance(); showSection(pendingSection, pendingBtn); if(pendingSection === 'finance') calculerFinance(); } else alert("Mot de passe Administrateur incorrect"); }
 
+        // INITIALISATION
         function init() { updateUI(); remplirSelects(); chargerEleves(); chargerStaff(); chargerConfig(); refreshStats(); }
+        
         function updateUI() {
             document.getElementById('navSchoolName').innerText = school.name; document.getElementById('loginSchoolName').innerText = school.name;
             document.getElementById('navYear').innerText = school.year; document.getElementById('loginYearDisplay').innerText = "Année Scolaire : " + school.year;
             document.getElementById('logoInitial').innerText = school.name[0]; document.getElementById('schoolNameInput').value = school.name;
             document.getElementById('schoolYearInput').value = school.year; document.getElementById('tauxInput').value = taux;
+            document.getElementById('displayTauxNav').innerText = `Taux: 1$ = ${taux} FC`;
+        }
+
+        // GESTION DES CLASSES (Correction demandée)
+        function ajouterClasse() {
+            const n = document.getElementById('newClassName').value.toUpperCase();
+            const t = Number(document.getElementById('newClassTarif').value);
+            if(n && t) {
+                classes.push({nom: n, tarif: t});
+                sauver();
+                chargerConfig();
+                remplirSelects();
+                document.getElementById('newClassName').value = "";
+                document.getElementById('newClassTarif').value = "";
+            } else {
+                alert("Veuillez remplir le nom et le tarif");
+            }
+        }
+
+        function chargerConfig() { 
+            document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => 
+                `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`
+            ).join(''); 
+        }
+
+        function suppClasse(i) { 
+            if(confirm("Supprimer cette classe ?")) {
+                classes.splice(i,1); sauver(); chargerConfig(); remplirSelects(); 
+            }
+        }
+
+        function remplirSelects() { 
+            let h = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join(''); 
+            document.getElementById('classeSelect').innerHTML = h; 
+            document.getElementById('filtreClasse').innerHTML = '<option value="">-- Classe --</option>' + h; 
+            document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Toute l\'école --</option>' + h; 
+        }
+
+        function suggererTarif() { 
+            const c = classes.find(x => x.nom === document.getElementById('classeSelect').value); 
+            if(c) document.getElementById('tarifIndiv').value = c.tarif; 
+        }
+
+        // GESTION DES ÉLÈVES
+        function ajouterEleve() { 
+            const n = document.getElementById('nom').value.toUpperCase(); 
+            const c = document.getElementById('classeSelect').value; 
+            const t = document.getElementById('tarifIndiv').value; 
+            if(n && t && c) { 
+                eleves.push({nom: n, classe: c, tarif: Number(t), paiements: {}}); 
+                sauver(); chargerEleves(); refreshStats(); 
+                document.getElementById('nom').value = ""; 
+            } else {
+                alert("Vérifiez le nom, la classe et le tarif.");
+            }
         }
 
         function chargerEleves() {
@@ -280,14 +337,29 @@
             let list = (f === "TOUS") ? eleves : eleves.filter(e => e.classe === f);
             tb.innerHTML = list.map((e, i) => `<tr><td><b>${e.nom}</b></td><td>${e.classe}</td><td>${e.tarif}$</td><td><button class="btn-del" onclick="supprimerEleve(${i})">X</button></td></tr>`).join('');
         }
-        function ajouterEleve() { const n = document.getElementById('nom').value.toUpperCase(); const c = document.getElementById('classeSelect').value; const t = document.getElementById('tarifIndiv').value; if(n && t) { eleves.push({nom: n, classe: c, tarif: Number(t), paiements: {}}); sauver(); chargerEleves(); refreshStats(); document.getElementById('nom').value = ""; } }
-        function chargerPaiements() {
-            const cl = document.getElementById('filtreClasse').value; const m = document.getElementById('moisSelect').value; if(!cl) return;
-            document.getElementById('zoneTablePaiement').style.display = 'block'; const list = eleves.filter(e => e.classe === cl);
-            document.querySelector('#tablePaiementFiltree tbody').innerHTML = list.map(e => { const paye = e.paiements[m]; return `<tr><td>${e.nom}</td><td style="color:${paye?'green':'red'}"><b>${paye?'PAYÉ':'NON'}</b></td><td><button class="${paye?'btn-del':'btn-main'}" onclick="togglePay('${e.nom}','${m}')">${paye?'Annuler':'Payer'}</button> <button class="btn-print" onclick="imprimerRecu('${e.nom}','${m}','SCOLARITE')">Reçu</button></td></tr>`; }).join('');
-        }
-        function togglePay(nom, mois) { const e = eleves.find(x => x.nom === nom); e.paiements[mois] = !e.paiements[mois]; sauver(); chargerPaiements(); refreshStats(); }
 
+        function supprimerEleve(i) { if(confirm("Supprimer cet élève ?")) { eleves.splice(i,1); sauver(); chargerEleves(); refreshStats(); } }
+
+        // PAIEMENTS
+        function chargerPaiements() {
+            const cl = document.getElementById('filtreClasse').value; 
+            const m = document.getElementById('moisSelect').value; 
+            if(!cl) return;
+            document.getElementById('zoneTablePaiement').style.display = 'block'; 
+            const list = eleves.filter(e => e.classe === cl);
+            document.querySelector('#tablePaiementFiltree tbody').innerHTML = list.map(e => { 
+                const paye = e.paiements[m]; 
+                return `<tr><td>${e.nom}</td><td style="color:${paye?'green':'red'}"><b>${paye?'PAYÉ':'NON'}</b></td><td><button class="${paye?'btn-del':'btn-main'}" onclick="togglePay('${e.nom}','${m}')">${paye?'Annuler':'Payer'}</button> <button class="btn-print" onclick="imprimerRecu('${e.nom}','${m}','SCOLARITE')">Reçu</button></td></tr>`; 
+            }).join('');
+        }
+
+        function togglePay(nom, mois) { 
+            const e = eleves.find(x => x.nom === nom); 
+            e.paiements[mois] = !e.paiements[mois]; 
+            sauver(); chargerPaiements(); refreshStats(); 
+        }
+
+        // FINANCE & HISTORIQUE
         function enregistrerHist(nom, motif, montant) {
             refID++; localStorage.setItem('p_ref', refID);
             const entry = { ref: `R-${refID}`, date: new Date().toLocaleString('fr-FR'), nom: nom, motif: motif, mnt: montant };
@@ -313,14 +385,14 @@
             }
         }
 
-        function chargerStaff() { document.querySelector('#tableStaff tbody').innerHTML = staff.map((s, i) => `<tr><td>${s.nom}</td><td>${s.salaire}$</td><td>${s.avances}$</td><td>${s.salaire - s.avances}$</td><td><button class="btn-main" onclick="payerStaff(${i})">Paie</button></td></tr>`).join(''); }
-        function ajouterStaff() { const n = document.getElementById('staffNom').value; const s = Number(document.getElementById('staffSalaire').value); if(n && s) { staff.push({nom:n, salaire:s, avances:0}); sauver(); chargerStaff(); } }
-        function payerStaff(i) { const v = Number(prompt("Montant ($) ?")); if(v) { staff[i].avances += v; sauver(); chargerStaff(); refreshStats(); if(confirm("Imprimer reçu ?")) imprimerRecu(staff[i].nom, "AVANCE", "Salaire", v); } }
-
         function calculerFinance() {
             const mois = ["Septembre", "Octobre", "Novembre", "Décembre", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août"];
             let total = 0; let html = "<table>";
-            mois.forEach(m => { let mRec = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0); total += mRec; if(mRec > 0) html += `<tr><td>${m}</td><td>${mRec} $</td></tr>`; });
+            mois.forEach(m => { 
+                let mRec = eleves.reduce((s, e) => s + (e.paiements[m] ? e.tarif : 0), 0); 
+                total += mRec; 
+                if(mRec > 0) html += `<tr><td>${m}</td><td>${mRec} $</td></tr>`; 
+            });
             const totAv = staff.reduce((s, x) => s + x.avances, 0);
             document.getElementById('finBilanNet').innerText = (total - totAv) + " $";
             document.getElementById('finBilanFC').innerText = ((total - totAv) * taux).toLocaleString() + " CDF";
@@ -328,18 +400,65 @@
             document.getElementById('tableHistorique').querySelector('tbody').innerHTML = historique.map(h => `<tr><td>${h.ref}</td><td>${h.date}</td><td>${h.nom}</td><td>${h.motif}</td><td>${h.mnt}$</td></tr>`).join('');
         }
 
-        function sauverConfigGale() { school.name = document.getElementById('schoolNameInput').value; school.year = document.getElementById('schoolYearInput').value; taux = Number(document.getElementById('tauxInput').value); localStorage.setItem('p_taux', taux); localStorage.setItem('p_school', JSON.stringify(school)); updateUI(); refreshStats(); alert("Enregistré"); }
-        function modifierSecurite() { const t = document.getElementById('typePass').value; const o = document.getElementById('oldPass').value; const n = document.getElementById('newPass').value; if(t === 'pin' && o === currentPin) { currentPin = n; localStorage.setItem('p_pin', n); alert("PIN changé"); } else if(t === 'admin' && o === adminPass) { adminPass = n; localStorage.setItem('p_admin', n); alert("Pass Admin changé"); } else alert("Code faux"); }
-        function refreshStats() { document.getElementById('statTotalEleves').innerText = eleves.length; document.getElementById('statTaux').innerText = taux + " FC"; let tRec = 0; eleves.forEach(e => { tRec += Object.values(e.paiements).filter(v => v).length * e.tarif; }); const tAv = staff.reduce((s, x) => s + x.avances, 0); document.getElementById('statCaisse').innerText = (tRec - tAv) + " $"; }
-        function showSection(id, btn) { document.querySelectorAll('.section').forEach(s => s.style.display = 'none'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).style.display = 'block'; if(btn) btn.classList.add('active'); }
-        function remplirSelects() { let h = classes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join(''); document.getElementById('classeSelect').innerHTML = h; document.getElementById('filtreClasse').innerHTML = '<option value="">-- Classe --</option>' + h; document.getElementById('filtreListeEleve').innerHTML = '<option value="TOUS">-- Toute l\'école --</option>' + h; }
-        function chargerConfig() { document.querySelector('#tableConfigClasses tbody').innerHTML = classes.map((c, i) => `<tr><td>${c.nom}</td><td>${c.tarif}$</td><td><button class="btn-del" onclick="suppClasse(${i})">X</button></td></tr>`).join(''); }
-        function suppClasse(i) { classes.splice(i,1); sauver(); chargerConfig(); remplirSelects(); }
-        function supprimerEleve(i) { if(confirm("Supprimer ?")) { eleves.splice(i,1); sauver(); chargerEleves(); refreshStats(); } }
-        function sauver() { localStorage.setItem('p_eleves', JSON.stringify(eleves)); localStorage.setItem('p_classes', JSON.stringify(classes)); localStorage.setItem('p_staff', JSON.stringify(staff)); }
-        function resetApp() { if(confirm("TOUT EFFACER ?")) { localStorage.clear(); location.reload(); } }
-        function suggererTarif() { const c = classes.find(x => x.nom === document.getElementById('classeSelect').value); if(c) document.getElementById('tarifIndiv').value = c.tarif; }
-        function imprimerListe(type) { const cl = document.getElementById('filtreClasse').value; const m = document.getElementById('moisSelect').value; let list = eleves.filter(e => e.classe === cl); if(type === 'solvables') list = list.filter(e => e.paiements[m]); else list = list.filter(e => !e.paiements[m]); let html = `<h2>${type.toUpperCase()} - ${cl} (${m})</h2><table border="1" style="width:100%;">`; list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`); document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print(); }
+        // PERSONNEL
+        function chargerStaff() { document.querySelector('#tableStaff tbody').innerHTML = staff.map((s, i) => `<tr><td>${s.nom}</td><td>${s.salaire}$</td><td>${s.avances}$</td><td>${s.salaire - s.avances}$</td><td><button class="btn-main" onclick="payerStaff(${i})">Paie</button></td></tr>`).join(''); }
+        function ajouterStaff() { const n = document.getElementById('staffNom').value; const s = Number(document.getElementById('staffSalaire').value); if(n && s) { staff.push({nom:n, salaire:s, avances:0}); sauver(); chargerStaff(); } }
+        function payerStaff(i) { const v = Number(prompt("Montant ($) ?")); if(v) { staff[i].avances += v; sauver(); chargerStaff(); refreshStats(); if(confirm("Imprimer reçu ?")) imprimerRecu(staff[i].nom, "AVANCE", "Salaire", v); } }
+
+        // CONFIGURATION GÉNÉRALE
+        function sauverConfigGale() { 
+            school.name = document.getElementById('schoolNameInput').value; 
+            school.year = document.getElementById('schoolYearInput').value; 
+            taux = Number(document.getElementById('tauxInput').value); 
+            localStorage.setItem('p_taux', taux); 
+            localStorage.setItem('p_school', JSON.stringify(school)); 
+            updateUI(); refreshStats(); alert("Configuration enregistrée"); 
+        }
+
+        function modifierSecurite() { 
+            const t = document.getElementById('typePass').value; 
+            const o = document.getElementById('oldPass').value; 
+            const n = document.getElementById('newPass').value; 
+            if(t === 'pin' && o === currentPin) { currentPin = n; localStorage.setItem('p_pin', n); alert("PIN changé"); } 
+            else if(t === 'admin' && o === adminPass) { adminPass = n; localStorage.setItem('p_admin', n); alert("Pass Admin changé"); } 
+            else alert("Ancien code incorrect"); 
+        }
+
+        function refreshStats() { 
+            document.getElementById('statTotalEleves').innerText = eleves.length; 
+            document.getElementById('statTaux').innerText = taux + " FC"; 
+            let tRec = 0; 
+            eleves.forEach(e => { tRec += Object.values(e.paiements).filter(v => v).length * e.tarif; }); 
+            const tAv = staff.reduce((s, x) => s + x.avances, 0); 
+            document.getElementById('statCaisse').innerText = (tRec - tAv) + " $"; 
+            document.getElementById('statRecettes').innerText = tRec + " $";
+        }
+
+        function showSection(id, btn) { 
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none'); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+            document.getElementById(id).style.display = 'block'; 
+            if(btn) btn.classList.add('active'); 
+        }
+
+        function sauver() { 
+            localStorage.setItem('p_eleves', JSON.stringify(eleves)); 
+            localStorage.setItem('p_classes', JSON.stringify(classes)); 
+            localStorage.setItem('p_staff', JSON.stringify(staff)); 
+        }
+
+        function resetApp() { if(confirm("ATTENTION : Cela va supprimer TOUTES les données de l'école définitivement. Continuer ?")) { localStorage.clear(); location.reload(); } }
+
+        function imprimerListe(type) { 
+            const cl = document.getElementById('filtreClasse').value; 
+            const m = document.getElementById('moisSelect').value; 
+            let list = eleves.filter(e => e.classe === cl); 
+            if(type === 'solvables') list = list.filter(e => e.paiements[m]); 
+            else list = list.filter(e => !e.paiements[m]); 
+            let html = `<h2>LISTE DES ${type.toUpperCase()}</h2><h3>Classe: ${cl} | Mois: ${m}</h3><hr><table border="1" style="width:100%; border-collapse:collapse;"><tr><th>Nom</th><th>Tarif</th></tr>`; 
+            list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`); 
+            document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print(); 
+        }
     </script>
 </body>
 </html>
