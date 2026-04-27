@@ -1,8 +1,8 @@
 {
   "name": "Gestion Scolaire Pro",
   "short_name": "ScolairePro",
-  "description": "Système de gestion scolaire et comptabilité",
-  "start_url": ".",
+  "description": "Système de gestion scolaire",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a252f",
   "theme_color": "#27ae60",
@@ -10,7 +10,8 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2940/2940651.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
