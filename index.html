@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Gestion Scolaire Pro</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a252f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2940/2940651.png">
+
     <style>
         :root { 
             --sidebar: #1a252f; --accent: #27ae60; --bg: #f4f7f6; 
@@ -62,6 +69,8 @@
     </style>
 </head>
 <body onmousemove="resetIdleTimer()" onkeypress="resetIdleTimer()">
+
+    <button id="pwaInstallBtn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:10000; background:var(--finance); padding:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">📥 Installer l'Application</button>
 
     <div id="loginOverlay">
         <div class="login-box">
@@ -277,7 +286,7 @@
             document.getElementById('displayTauxNav').innerText = `Taux: 1$ = ${taux} FC`;
         }
 
-        // GESTION DES CLASSES (Correction demandée)
+        // GESTION DES CLASSES
         function ajouterClasse() {
             const n = document.getElementById('newClassName').value.toUpperCase();
             const t = Number(document.getElementById('newClassTarif').value);
@@ -458,6 +467,33 @@
             let html = `<h2>LISTE DES ${type.toUpperCase()}</h2><h3>Classe: ${cl} | Mois: ${m}</h3><hr><table border="1" style="width:100%; border-collapse:collapse;"><tr><th>Nom</th><th>Tarif</th></tr>`; 
             list.forEach(e => html += `<tr><td>${e.nom}</td><td>${e.tarif}$</td></tr>`); 
             document.getElementById('contentToPrint').innerHTML = html + "</table>"; window.print(); 
+        }
+
+        // --- 2. LOGIQUE D'INSTALLATION PWA ---
+        let deferredPrompt;
+        const pwaBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            pwaBtn.style.display = 'block'; // Affiche le bouton si l'app est installable
+        });
+
+        pwaBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') pwaBtn.style.display = 'none';
+                deferredPrompt = null;
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA prête !'))
+                    .catch(err => console.log('Erreur SW:', err));
+            });
         }
     </script>
 </body>
